@@ -1,8 +1,9 @@
 """Gradio UI: history and booking are independent server-side session states."""
 import os
+from pathlib import Path
 os.environ.setdefault("GRADIO_ANALYTICS_ENABLED", "False")
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(Path(__file__).with_name(".env"))
 import gradio as gr
 from fastapi import FastAPI
 import uvicorn
@@ -42,6 +43,8 @@ with gr.Blocks(title="Лапки & Хвостики · Ассистент", anal
                       concurrency_id="chat", concurrency_limit=1, api_name=False)
     submit.click(**event_args)
     message.submit(**event_args)
+    chat.clear(fn=clear, outputs=[message, chat, history, booking],
+               concurrency_id="chat", concurrency_limit=1, api_name=False)
     reset.click(fn=clear, outputs=[message, chat, history, booking],
                 concurrency_id="chat", concurrency_limit=1, api_name=False)
 
@@ -50,7 +53,8 @@ server = FastAPI()
 @server.get("/healthz")
 def health():
     return {"status": "ok"}
-server = gr.mount_gradio_app(server, demo, path="/", theme=gr.themes.Soft(primary_hue="teal"), css=CSS)
+server = gr.mount_gradio_app(server, demo, path="/", show_error=False, enable_monitoring=False,
+                             blocked_paths=[str(Path(__file__).with_name(".env")), str(Path(__file__).with_name(".git"))], theme=gr.themes.Soft(primary_hue="teal"), css=CSS)
 
 if __name__ == "__main__":
     uvicorn.run(server, host="0.0.0.0", port=int(os.getenv("PORT", "7860")), access_log=False)
