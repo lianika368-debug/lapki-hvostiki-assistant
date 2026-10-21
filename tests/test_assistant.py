@@ -117,3 +117,9 @@ def test_same_patch_preserves_pending_id(complete):
     bot.extractor.extract.return_value = Extraction(intent="общее", topics=["hours"], patch=Draft(owner_name=complete["owner_name"]))
     h, s = turn(bot, "Какой график?", s, h)
     assert s.application_id == original and s.pending is not None
+
+def test_slots_question_does_not_start_booking():
+    bot, _ = setup_result(Extraction(intent="запись", topics=["availability"]))
+    h, s = turn(bot, "Есть свободное время завтра?", BookingState())
+    assert not s.active
+    assert "нет данных о свободных" in h[-1]["content"]
