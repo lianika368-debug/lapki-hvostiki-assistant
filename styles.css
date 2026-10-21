@@ -1,0 +1,89 @@
+/* A soft pink / pistachio salon identity, inspired by the supplied reference. */
+:root { color-scheme: light; }
+html {scroll-behavior:smooth;scroll-padding-top:24px;}
+body {margin:0;background:#fff5f8 !important;border-top:8px solid #f16eae;}
+.gradio-container {max-width:1180px !important;margin:20px auto !important;padding:0 34px 14px !important;background:#fff !important;border:1px solid #f4dfe9;border-radius:28px;box-shadow:0 12px 50px #693e5010;}
+.gradio-container > .main {padding:0 !important;}
+.gradio-container .gap {gap:18px;}
+.salon-nav {display:flex;align-items:center;justify-content:space-between;padding:22px 0;border-bottom:1px solid #f0eee8;gap:18px;}
+.brand {display:flex;gap:10px;align-items:center;text-decoration:none;color:#708d42 !important;font-size:20px;font-weight:750;line-height:1.15;letter-spacing:-.7px;}
+.brand small {display:block;letter-spacing:2px;font-size:8px;color:#7a8370;font-weight:600;margin-top:7px;}
+.brand-paw {color:#ec65a5;width:36px;height:36px;display:block;}
+.brand-paw svg {width:100%;height:100%;}
+.nav-right {display:flex;align-items:center;gap:25px;font-size:11px;font-weight:600;}
+.nav-right a {color:#665c60 !important;text-decoration:none;}
+.hours-dot::before {content:"";width:6px;height:6px;background:#96b865;border-radius:50%;display:inline-block;margin-right:7px;}
+.hero {display:grid;grid-template-columns:1.35fr 1fr;gap:34px;align-items:center;padding:40px 6px 42px;}
+.eyebrow {font-size:9px;letter-spacing:1.9px;font-weight:750;color:#89966f;}
+.hero h1 {font-size:43px !important;line-height:1.15 !important;letter-spacing:-1.8px;margin:16px 0 18px !important;font-weight:750;color:#779549;}
+.hero h1 span {color:#ed65a6;}
+.hero-copy > p {font-size:13px;line-height:1.8;color:#73776e;margin:0 0 23px;}
+.hero-cta {display:inline-flex;align-items:center;justify-content:space-between;gap:38px;background:#ed65a6;color:white !important;text-decoration:none;border-radius:99px;padding:13px 23px;font-size:12px;font-weight:700;transition:background .15s,transform .15s;}
+.hero-cta:hover {background:#dd4b92;transform:translateY(-1px);}
+.hero-cta span {font-size:20px;line-height:1;}
+.hero-tags {display:flex;gap:15px;margin-top:20px;flex-wrap:wrap;color:#858a7e;font-size:10px;}
+.hero-visual {position:relative;max-width:350px;width:100%;justify-self:center;padding:16px;}
+.hero-visual::before {content:"";position:absolute;inset:4px;background:#e0eccd;border-radius:40% 56% 39% 50% / 48% 39% 58% 42%;transform:rotate(9deg);}
+.photo-frame {position:relative;aspect-ratio:1/1;border-radius:34% 39% 28% 40% / 38% 30% 43% 30%;overflow:hidden;transform:rotate(-4deg);background:#d5e4bc;}
+.photo-frame img {height:100%;width:100%;object-fit:cover;object-position:50% 43%;transform:rotate(4deg) scale(1.15);display:block;}
+.photo-sticker {position:absolute;bottom:0;left:-8px;background:#fff1f7;color:#c04f83;border:1px solid #f3c9df;border-radius:15px;font-size:11px;font-weight:650;padding:11px 20px;transform:rotate(-7deg);line-height:1.5;box-shadow:0 6px 18px #7c3c5510;}
+.hero-sparkle {position:absolute;right:3px;top:10px;font-size:45px;color:#ec74b0;}
+#booking {padding:26px 0 28px !important;border-top:1px solid #eeeee6;gap:26px !important;align-items:flex-start;}
+#chat-panel,#visit-panel {background:transparent !important;border:0 !important;gap:13px !important;}
+.section-title h2 {margin:8px 0 8px !important;font-size:23px !important;line-height:1.3 !important;letter-spacing:-.7px;color:#354130;}
+.section-title h2 span {color:#ec74b0;}
+.section-title p {font-size:12px;color:#7b8074;margin:0 0 4px;}
+#quick-questions {gap:7px !important;}
+#quick-questions button {font-size:10px !important;min-height:36px !important;padding:7px 9px !important;border-radius:99px !important;background:#faf7f9 !important;border:1px solid #eee4e9 !important;box-shadow:none !important;font-weight:650;color:#6f636b !important;transition:background .15s;}
+#quick-questions button:hover {background:#fce3ef !important;border-color:#f0bbd4 !important;}
+#quick-questions #quick-book {background:#e9f0dc !important;color:#536c2c !important;border-color:#dce7c9 !important;}
+#salon-chat {border-radius:20px !important;border:1px solid #e7e9df !important;background:#fcfcf9 !important;box-shadow:none !important;}
+#salon-chat .message {font-size:13px !important;line-height:1.65 !important;}
+#salon-chat .message.bot {background:white !important;color:#354130 !important;border:1px solid #e9ecdf !important;border-radius:17px 17px 17px 4px !important;box-shadow:none !important;}
+#salon-chat .message.user {background:#fce8f2 !important;color:#71435b !important;border:1px solid #f4d7e6 !important;border-radius:17px 17px 4px 17px !important;box-shadow:none !important;}
+#composer {gap:10px !important;align-items:stretch;}
+#composer .block {box-shadow:none !important;border-radius:16px !important;}
+#composer textarea {font-size:12px !important;}
+#composer button {border:0 !important;border-radius:16px !important;font-size:12px !important;box-shadow:none !important;}
+#chat-bottom {align-items:center;gap:7px !important;}
+.chat-hint {font-size:9px;line-height:1.7;color:#85897d;margin:0;}
+#chat-bottom button {font-size:10px;background:transparent !important;border:0 !important;color:#8b7f85 !important;box-shadow:none !important;min-height:30px !important;text-decoration:underline;text-underline-offset:4px;}
+#confirm-application {border-radius:14px !important;min-height:44px;}
+.context-answer {border-radius:99px !important;font-size:12px !important;background:#eef3e5 !important;color:#526a35 !important;}
+.visit-card {background:#f1f5e9;border:1px solid #e7eddb;border-radius:22px;padding:25px 23px;}
+.visit-card h3 {font-size:23px !important;line-height:1.35 !important;color:#6e8947;margin:13px 0 24px !important;letter-spacing:-.5px;}
+.visit-item {border-top:1px solid #dfe6d3;padding:17px 0 0;margin-top:16px;}
+.visit-item > span {font-size:9px;letter-spacing:1.4px;font-weight:750;color:#8a967a;}
+.visit-item p {font-size:11px;line-height:1.8;color:#606b55;margin:7px 0 0;}
+.phone-link {font-size:14px;font-weight:750;color:#5c733e !important;display:block;margin-top:24px;text-decoration:none;}
+.telegram-link {display:block;font-size:10px;color:#6c7c59 !important;margin-top:10px;}
+.steps-card {border:1px solid #efe9ec;border-radius:22px;padding:23px;margin-top:17px;}
+.steps-card > div {display:flex;gap:12px;align-items:flex-start;margin-top:20px;}
+.steps-card b {border-radius:50%;display:flex;align-items:center;justify-content:center;width:26px;height:26px;flex-shrink:0;background:#fff0f7;color:#d9699e;font-size:10px;}
+.steps-card p {margin:0;font-size:11px;line-height:1.6;color:#606859;font-weight:600;}
+.steps-card small {font-weight:400;font-size:9px;color:#94978b;}
+#privacy {border:0 !important;border-top:1px solid #f0eee8 !important;border-radius:0 !important;background:white !important;box-shadow:none !important;}
+#privacy button {font-size:10px;color:#818579 !important;}
+#privacy .prose {font-size:11px !important;line-height:1.8;}
+.salon-footer {padding:12px 0 9px;display:flex;justify-content:space-between;gap:15px;font-size:10px;color:#94998a;}
+.footer-heart {color:#e47aa9;}
+footer:not(.salon-footer) {display:none !important;}
+button:focus-visible,a:focus-visible {outline:3px solid #9bb769 !important;outline-offset:4px;}
+@media(max-width:850px) {
+ .gradio-container {padding:0 22px 12px !important;margin:12px auto !important;}
+ .hero {gap:12px;padding:27px 0 35px;}.hero h1 {font-size:34px !important;}.hero-visual {max-width:280px;}
+ .nav-right {font-size:10px;gap:12px;}.hours-dot {display:none;}
+ #booking {gap:18px !important;} #visit-panel {min-width:230px !important;}
+}
+@media(max-width:650px) {
+ body {border-top-width:6px;}.gradio-container {border-radius:0;max-width:100% !important;margin:0 !important;padding:0 19px 10px !important;border-left:0;border-right:0;}
+ .salon-nav {padding:18px 0;}.brand {font-size:17px;}.brand-paw {width:29px;height:29px;}.brand small {font-size:7px;letter-spacing:1.5px;}.nav-right {font-size:10px;}
+ .hero {grid-template-columns:1fr;gap:22px;padding:28px 0 32px;}.hero h1 {font-size:35px !important;letter-spacing:-1.5px;}.hero-copy>p {font-size:12px;}.desktop-break {display:none;}
+ .hero-visual {max-width:265px;justify-self:center;}.photo-sticker {font-size:10px;}.hero-tags {font-size:9px;gap:12px;}
+ #booking {flex-direction:column;padding-top:24px !important;} #chat-panel,#visit-panel {width:100% !important;min-width:0 !important;}
+ .section-title h2 {font-size:22px !important;} #quick-questions button {min-width:calc(50% - 5px) !important;font-size:10px !important;}
+ #composer {flex-wrap:wrap;}#composer>div {min-width:100% !important;}#composer>button {width:100%;min-height:44px;}
+ #salon-chat {height:390px !important;}.chat-hint {font-size:9px;}.visit-card {padding:22px;}.visit-card h3 br {display:none;}
+ .steps-card {display:none;}.salon-footer {font-size:9px;}
+}
+@media(prefers-reduced-motion:reduce) {html {scroll-behavior:auto;}.hero-cta {transition:none;}}
