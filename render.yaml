@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: lapki-hvostiki-assistant
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.lock
+    startCommand: python app.py
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.15
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: GRADIO_ANALYTICS_ENABLED
+        value: "False"
