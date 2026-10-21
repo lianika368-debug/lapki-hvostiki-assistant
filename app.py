@@ -64,7 +64,7 @@ def safe(value):
 
 PAW = '<svg viewBox="0 0 48 48" fill="currentColor" aria-hidden="true"><ellipse cx="12" cy="16" rx="5" ry="7" transform="rotate(-25 12 16)"/><ellipse cx="23" cy="10" rx="5" ry="7"/><ellipse cx="35" cy="15" rx="5" ry="7" transform="rotate(25 35 15)"/><ellipse cx="41" cy="27" rx="4" ry="6" transform="rotate(40 41 27)"/><path d="M11 35c0-6 8-16 14-16s14 10 14 16-7 7-14 4c-7 3-14 2-14-4z"/></svg>'
 HEADER = f'''<header class="salon-nav"><a class="brand" href="#top"><span class="brand-paw">{PAW}</span><span>{safe(SALON['name'])}<small>ГРУМИНГ · ЕКАТЕРИНБУРГ</small></span></a><div class="nav-right"><span class="hours-dot">Ежедневно · 10:00–20:00</span><a href="https://t.me/lapki_hvostiki_ekb" target="_blank" rel="noopener noreferrer">Telegram ↗</a></div></header>'''
-HERO = '''<section class="hero" id="top"><div class="hero-copy"><span class="eyebrow">ДЛЯ ТЕХ, У КОГО ЛАПКИ</span><h1>Красота для лапок.<br><span>Забота для хвостиков.</span></h1><p>Поможем выбрать уход и оставить заявку на груминг.<br class="desktop-break"> Просто расскажите нам о своём питомце.</p><a class="hero-cta" href="#booking">Давайте знакомиться <span>↗</span></a><div class="hero-tags"><span>♡ Для кошек и собак</span><span>По предварительной заявке</span></div></div><div class="hero-visual"><div class="photo-frame"><img src="/salon-assets/golden-retriever.jpg" alt="Золотистый ретривер с цветком" width="900" height="1443" fetchpriority="high"></div><span class="photo-sticker">лапки чистые,<br>хвостик счастливый ♡</span><span class="hero-sparkle" aria-hidden="true">✳</span></div></section>'''
+HERO = '''<section class="hero" id="top"><div class="hero-copy"><span class="eyebrow">ДЛЯ ТЕХ, У КОГО ЛАПКИ</span><h1>Красота для лапок.<br><span>Забота для хвостиков.</span></h1><p>Поможем выбрать уход и оставить заявку на груминг.<br class="desktop-break"> Просто расскажите нам о своём питомце.</p><a class="hero-cta" href="#booking">Давайте знакомиться <span>↗</span></a><div class="hero-tags"><span>♡ Для кошек и собак</span><span>По предварительной заявке</span></div></div><div class="hero-visual"><div class="photo-frame"><img src="/salon-assets/playful-corgi.webp" alt="Весёлый корги с шапочкой пены" width="1254" height="1254" fetchpriority="high"></div><span class="photo-sticker">Груминг<br>с заботой ♡</span><span class="hero-sparkle" aria-hidden="true">✳</span></div></section>'''
 ASIDE = f'''<aside class="visit-card"><span class="eyebrow">ДО ВСТРЕЧИ В САЛОНЕ</span><h3>Заглядывайте<br>с хвостиком ♡</h3><div class="visit-item"><span>ГДЕ МЫ</span><p>{safe(SALON['address'])}</p></div><div class="visit-item"><span>КОГДА ЖДЁМ</span><p>{safe(SALON['hours'])}</p></div><a class="phone-link" href="tel:+79991234567">{safe(SALON['phone'])}</a><a class="telegram-link" href="https://t.me/lapki_hvostiki_ekb" target="_blank" rel="noopener noreferrer">Написать в Telegram ↗</a></aside><div class="steps-card"><span class="eyebrow">ЗАПИСАТЬСЯ ПРОСТО</span><div><b>01</b><p>Расскажите о питомце<br><small>и выберите услугу</small></p></div><div><b>02</b><p>Проверьте заявку<br><small>и подтвердите отправку</small></p></div><div><b>03</b><p>Уточните запись у салона<br><small>время в заявке — пожелание</small></p></div></div>'''
 
 THEME = gr.themes.Soft(primary_hue="pink", secondary_hue="lime", neutral_hue="stone", radius_size="lg").set(
@@ -90,7 +90,7 @@ with gr.Blocks(title="Лапки & Хвостики · Груминг с заб�
     gr.HTML(HERO)
     with gr.Row(elem_id="booking", equal_height=False):
         with gr.Column(scale=3, min_width=320, elem_id="chat-panel"):
-            gr.HTML('<div class="section-title"><span class="eyebrow">ВАШ АССИСТЕНТ</span><h2>Начнём с вашего питомца <span>✳</span></h2><p>Выберите быстрый вопрос или напишите свой.</p></div>')
+            gr.HTML('<div class="section-title"><span class="eyebrow">ВАШ АССИСТЕНТ</span><h2>Задайте вопрос или запишите питомца <span>✳</span></h2><p>Выберите быстрый вопрос или напишите свой.</p></div>')
             with gr.Row(elem_id="quick-questions"):
                 book = gr.Button("🐾 Хочу записаться", elem_id="quick-book", min_width=145)
                 prices = gr.Button("Услуги и цены", min_width=125)
@@ -105,9 +105,11 @@ with gr.Blocks(title="Лапки & Хвостики · Груминг с заб�
             confirm = gr.Button("✓ Подтвердить и отправить заявку", variant="primary", visible=False, elem_id="confirm-application")
             groomer_answer = gr.Button("Мастер — без предпочтений", visible=False, elem_classes=["context-answer"])
             comment_answer = gr.Button("Нет особенностей", visible=False, elem_classes=["context-answer"])
-            with gr.Row(elem_id="composer"):
-                message = gr.Textbox(label="Ваше сообщение", placeholder="Например: хочу записать своего шпица…", max_lines=5, scale=5)
-                submit = gr.Button("Отправить ↗", variant="primary", scale=1, min_width=130)
+            with gr.Column(elem_id="message-card"):
+                gr.HTML('<div class="composer-title"><span aria-hidden="true">✎</span> Ваше сообщение</div><p class="composer-description">Напишите вопрос или расскажите о питомце для записи.</p>')
+                with gr.Row(elem_id="composer"):
+                    message = gr.Textbox(label="Ваше сообщение", show_label=False, placeholder="Напишите здесь…", lines=2, max_lines=5, scale=5)
+                    submit = gr.Button("Отправить ↗", variant="primary", scale=1, min_width=130)
             with gr.Row(elem_id="chat-bottom"):
                 gr.HTML('<p class="chat-hint">♡ Сначала проверяем заявку. Отправляем — с вашего согласия.</p>')
                 reset = gr.Button("Очистить диалог", size="sm", scale=0, min_width=145)

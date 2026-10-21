@@ -25,7 +25,7 @@ body {margin:0;background:#fff5f8 !important;border-top:8px solid #f16eae;}
 .hero-visual {position:relative;max-width:350px;width:100%;justify-self:center;padding:16px;}
 .hero-visual::before {content:"";position:absolute;inset:4px;background:#e0eccd;border-radius:40% 56% 39% 50% / 48% 39% 58% 42%;transform:rotate(9deg);}
 .photo-frame {position:relative;aspect-ratio:1/1;border-radius:34% 39% 28% 40% / 38% 30% 43% 30%;overflow:hidden;transform:rotate(-4deg);background:#d5e4bc;}
-.photo-frame img {height:100%;width:100%;object-fit:cover;object-position:50% 43%;transform:rotate(4deg) scale(1.15);display:block;}
+.photo-frame img {height:100%;width:100%;object-fit:cover;object-position:50% 45%;transform:rotate(4deg) scale(1.02);display:block;}
 .photo-sticker {position:absolute;bottom:0;left:-8px;background:#fff1f7;color:#c04f83;border:1px solid #f3c9df;border-radius:15px;font-size:11px;font-weight:650;padding:11px 20px;transform:rotate(-7deg);line-height:1.5;box-shadow:0 6px 18px #7c3c5510;}
 .hero-sparkle {position:absolute;right:3px;top:10px;font-size:45px;color:#ec74b0;}
 #booking {padding:26px 0 28px !important;border-top:1px solid #eeeee6;gap:26px !important;align-items:flex-start;}
@@ -87,3 +87,15 @@ button:focus-visible,a:focus-visible {outline:3px solid #9bb769 !important;outli
  .steps-card {display:none;}.salon-footer {font-size:9px;}
 }
 @media(prefers-reduced-motion:reduce) {html {scroll-behavior:auto;}.hero-cta {transition:none;}}
+
+/* The input is the main action: give it its own visible pink card. */
+#message-card {background:#ffedf5 !important;border:2px solid #ed9bc3 !important;border-radius:20px !important;padding:17px !important;box-shadow:0 5px 20px #d75d9410 !important;gap:10px !important;}
+.composer-title {font-size:15px;font-weight:750;color:#a42e68;line-height:1.4;}
+.composer-title span {display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;margin-right:5px;border-radius:9px;background:#f9d0e5;color:#a42e68;}
+.composer-description {font-size:11px;line-height:1.6;color:#866376;margin:4px 0 2px;}
+#composer .block {background:white !important;border:1px solid #eab7d0 !important;}
+#composer textarea {background:#fff !important;color:#47303c !important;font-size:14px !important;padding:13px !important;min-height:76px !important;}
+#composer .block:focus-within {border-color:#d83a88 !important;box-shadow:0 0 0 3px #f7c4de !important;}
+@media(max-width:650px) {#message-card {padding:13px !important;} .composer-description {font-size:11px;}}
+
+#message-card .styler,#composer .form {background:transparent !important;border:0 !important;}
