@@ -86,7 +86,7 @@ python -m pytest -q
 | --- | --- |
 | Маршрутизация намерений, вопросы, итог, подтверждение | `assistant.py`: `route_intent`, `Assistant.respond` |
 | Память текущего диалога и черновик | `app.py`: отдельные `history`, `booking`; `assistant.py`: `BookingState` |
-| Structured output Gemini и проверка Pydantic | `gemini_client.py`: `response_schema=Extraction`; `models.py`: `Draft`, `Extraction`, `Application` |
+| Structured output Gemini и проверка Pydantic | `gemini_client.py`: `response_json_schema=Extraction.model_json_schema()`; `models.py`: `Draft`, `Extraction`, `Application` |
 | Сохранение и защита от повторной вставки | `storage.py`: `SupabaseStore.save` |
 | Данные салона | `salon.json` |
 | RLS и права | `supabase/create_applications.sql`, `supabase/verify_security.sql` |

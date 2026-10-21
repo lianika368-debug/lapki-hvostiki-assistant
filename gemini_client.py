@@ -39,7 +39,7 @@ comment='Нет особенностей' только если клиент э�
                 contents=json.dumps(payload, ensure_ascii=False),
                 config=types.GenerateContentConfig(
                     system_instruction=instructions, temperature=0,
-                    response_mime_type="application/json", response_schema=Extraction,
+                    response_mime_type="application/json", response_json_schema=Extraction.model_json_schema(),
                 ),
             )
         return Extraction.model_validate_json(result.text or "")

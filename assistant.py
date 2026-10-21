@@ -42,6 +42,10 @@ def route_intent(message: str, extracted: Extraction) -> str:
         return "запись"
     if re.search(r"цен[ауы]|стоим|сколько.*(стоит|руб)|прайс", message.lower()):
         return "цена"
+    if re.search(r"свободн|скидк|акци|есть.*мест", message.lower()):
+        if "свободн" in message.lower() and "availability" not in extracted.topics:
+            extracted.topics.append("availability")
+        return "общее"
     return extracted.intent
 
 
@@ -73,6 +77,7 @@ def render_facts(extracted: Extraction, salon: dict) -> str:
 def summary(application: Application, salon: dict) -> str:
     values = application.model_dump(mode="json")
     values["service"] = salon["services"][application.service]["name"]
+    values["preferred_time"] = application.preferred_time.strftime("%H:%M")
     lines = [f"{LABELS[key]}: {html.escape(str(values[key]))}" for key in QUESTIONS]
     return ("Проверьте заявку:\n\n" + "\n\n".join(lines) +
             "\n\nЭто пожелание по времени, свободный слот не подтверждён. "
