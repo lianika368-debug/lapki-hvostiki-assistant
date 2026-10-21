@@ -99,3 +99,32 @@ button:focus-visible,a:focus-visible {outline:3px solid #9bb769 !important;outli
 @media(max-width:650px) {#message-card {padding:13px !important;} .composer-description {font-size:11px;}}
 
 #message-card .styler,#composer .form {background:transparent !important;border:0 !important;}
+
+/* Keep the conversation and composer on the first phone screen. */
+@media(max-width:650px) {
+ .html-container {padding:0 !important;}
+ .gradio-container .gap {gap:10px;}
+ .salon-nav {padding:11px 0;gap:8px;}
+ .brand {font-size:16px;}.brand small {margin-top:4px;}
+ .hero {grid-template-columns:minmax(0,1fr) 82px;gap:10px;padding:14px 0;}
+ .hero h1 {font-size:22px !important;letter-spacing:-.7px;margin:0 !important;line-height:1.2 !important;}
+ .hero-copy>.eyebrow,.hero-copy>p,.hero-cta,.hero-tags,.photo-sticker,.hero-sparkle {display:none;}
+ .hero-visual {max-width:82px;padding:4px;}
+ #booking {padding:14px 0 20px !important;gap:20px !important;}
+ #chat-panel {gap:9px !important;}
+ .section-title>.eyebrow,.section-title p {display:none;}
+ .section-title h2 {font-size:19px !important;line-height:1.25 !important;margin:0 !important;}
+ #quick-questions {gap:6px !important;}
+ #quick-questions button {min-height:34px !important;padding:6px 8px !important;}
+ #salon-chat {height:clamp(120px,20svh,170px) !important;min-height:120px !important;border-radius:16px !important;}
+ #salon-chat .message {font-size:12px !important;line-height:1.5 !important;}
+ #message-card {padding:10px !important;gap:7px !important;border-radius:16px !important;}
+ .composer-title {font-size:13px;}.composer-title span {width:22px;height:22px;}
+ .composer-description {display:none;}
+ #composer {flex-wrap:nowrap;gap:7px !important;}
+ #composer>div {min-width:0 !important;flex:1 !important;}
+ #composer>button {width:auto;min-width:112px !important;flex:0 0 112px !important;min-height:58px;padding:8px !important;}
+ #composer textarea {min-height:58px !important;padding:9px !important;}
+ #chat-bottom {gap:4px !important;}
+ .chat-hint {font-size:8px;line-height:1.4;}
+}
