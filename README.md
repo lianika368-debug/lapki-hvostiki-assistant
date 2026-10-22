@@ -34,6 +34,23 @@ python app.py
 | `SUPABASE_SERVICE_ROLE_KEY` | Серверный legacy service_role key проекта; не anon/publishable key |
 | `PORT` | 7860 локально; на Render используется назначенный платформой порт |
 | `GRADIO_ANALYTICS_ENABLED` | `False` |
+| `TELEGRAM_BOT_TOKEN` | Серверный токен бота из @BotFather |
+| `TELEGRAM_CHAT_ID` | ID личного чата администратора, который запустил бота |
+
+## Уведомления в Telegram
+
+Создайте бота через @BotFather (`/newbot`), откройте его и нажмите «Запустить».
+Добавьте `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHAT_ID` в локальный `.env` и в Render → Environment.
+Токен и ID не публикуются в GitHub и не передаются в браузер.
+ID чата можно получить серверным запросом `getUpdates` после сообщения боту.
+
+`notifications.py` отправляет все поля подтверждённой заявки через Telegram `sendMessage`
+после успешной проверки сохранения в Supabase. Повторное подтверждение в текущей сессии
+не отправляет повторное уведомление. Данные передаются обычным текстом без HTML/Markdown.
+При недоступности Telegram заявка остаётся в Supabase; в логах появляется
+`telegram_delivery_unconfirmed application_id=...` без токена и данных клиента.
+Автоматической очереди повторных отправок нет: проверяйте заявки в Supabase при таком событии.
+Если обе переменные пустые, уведомления отключены. Если задана только одна, отправка не сработает.
 
 ## Supabase
 

@@ -20,3 +20,7 @@ services:
         sync: false
       - key: GRADIO_ANALYTICS_ENABLED
         value: "False"
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false

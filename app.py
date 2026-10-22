@@ -14,9 +14,10 @@ from assistant import Assistant, BookingState, SALON, QUESTIONS, render_facts
 from models import Extraction
 from gemini_client import GeminiExtractor
 from storage import SupabaseStore
+from notifications import TelegramNotifier
 
 ROOT = Path(__file__).parent
-assistant = Assistant(GeminiExtractor(), SupabaseStore())
+assistant = Assistant(GeminiExtractor(), SupabaseStore(), notifier=TelegramNotifier())
 WELCOME = [{"role": "assistant", "content": "Здравствуйте! 🐾 Я ассистент «Лапки & Хвостики». Помогу выбрать услугу, подскажу стоимость и приму заявку. Начнём с вопроса или знакомства с вашим питомцем?"}]
 QUICK_QUESTIONS = {
     "prices": ("Какие у вас услуги и цены?", ["services"]),
@@ -116,7 +117,7 @@ with gr.Blocks(title="Лапки & Хвостики · Груминг с заб�
         with gr.Column(scale=1, min_width=260, elem_id="visit-panel"):
             gr.HTML(ASIDE)
     with gr.Accordion("О заявках и обработке данных", open=False, elem_id="privacy"):
-        gr.Markdown("Выбранное время — пожелание, а не подтверждённая запись. Заявка сохраняется только после вашего подтверждения.\n\nСообщения обрабатываются Google Gemini; подтверждённая заявка сохраняется в Supabase. Не указывайте лишние персональные данные. Очистка удаляет текущий диалог, но не уже отправленную заявку.")
+        gr.Markdown("Выбранное время — пожелание, а не подтверждённая запись. Заявка сохраняется только после вашего подтверждения.\n\nСообщения обрабатываются Google Gemini; подтверждённая заявка сохраняется в Supabase и отправляется администратору салона в Telegram. Не указывайте лишние персональные данные. Очистка удаляет текущий диалог, но не уже отправленную заявку.")
     gr.HTML(f'<footer class="salon-footer"><span>{safe(SALON["name"])} <span class="footer-heart">♡</span></span><span>Для тех, кого мы любим.</span></footer>')
     outputs = [message, chat, history, booking, confirm, groomer_answer, comment_answer]
     common = dict(inputs=[history, booking], outputs=outputs, concurrency_id="chat", concurrency_limit=1, api_name=False)

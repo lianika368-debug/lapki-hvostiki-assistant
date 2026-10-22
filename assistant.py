@@ -4,6 +4,7 @@ from pathlib import Path
 from uuid import uuid4
 import html
 import json
+import logging
 import re
 import time
 from pydantic import ValidationError
@@ -81,12 +82,13 @@ def summary(application: Application, salon: dict) -> str:
     lines = [f"{LABELS[key]}: {html.escape(str(values[key]))}" for key in QUESTIONS]
     return ("Проверьте заявку:\n\n" + "\n\n".join(lines) +
             "\n\nЭто пожелание по времени, свободный слот не подтверждён. "
-            "Чтобы отправить эти данные в салон и сохранить в Supabase, напишите «Подтверждаю». "
+            "Чтобы отправить эти данные в салон (в том числе в Telegram) и сохранить в Supabase, напишите «Подтверждаю». "
             "Для исправления укажите, что изменить; для отмены — «Отменить заявку».")
 
 class Assistant:
-    def __init__(self, extractor, store, salon=None):
+    def __init__(self, extractor, store, salon=None, notifier=None):
         self.extractor, self.store, self.salon = extractor, store, salon or SALON
+        self.notifier = notifier
 
     def respond(self, message: str, history: list[dict], state: BookingState):
         message = message.strip()
@@ -118,6 +120,16 @@ class Assistant:
                 # Never put API exceptions, customer data or credentials into logs/UI.
                 return self._reply(message, "Не удалось подтвердить сохранение заявки. Данные сохранены в текущем диалоге. Повторите «Подтверждаю» или свяжитесь с салоном: " + self.salon["phone"] + ".", history, state)
             state.saved, state.active = True, False
+            if self.notifier is not None and self.notifier.enabled:
+                try:
+                    message_id = self.notifier.send(state.application_id, validated, self.salon)
+                    logging.getLogger("uvicorn.error").info(
+                        "telegram_delivery_confirmed application_id=%s message_id=%s",
+                        state.application_id, message_id)
+                except Exception:
+                    # Saving succeeded. Never ask the client to create a second application.
+                    logging.getLogger(__name__).warning(
+                        "telegram_delivery_unconfirmed application_id=%s", state.application_id)
             return self._reply(message, "Заявка сохранена. Номер: " + state.application_id + ". Это ещё не подтверждение записи на выбранное время. Уточнить запись можно по телефону " + self.salon["phone"] + ".", history, state)
         # A short, session-local throttle protects accidental rapid clicks.
         if time.monotonic() - state.last_request < 1:
