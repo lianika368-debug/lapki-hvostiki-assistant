@@ -218,6 +218,8 @@ class Assistant:
         if extracted.action == 'cancel':
             state.active, state.pending, state.revision = False, None, None
             return self._reply(message, 'Подготовка заявки остановлена. Для отмены уже отправленной заявки свяжитесь с салоном.' if state.saved else 'Черновик заявки отменён. Чем помочь?', history, BookingState() if not state.saved else state)
+        if state.saved and (extracted.action == 'edit' or re.search(r'измен|помен|исправ|перенес|перенёс', message, re.I)):
+            return self._reply(message, 'Заявка уже передана администратору. Для изменения сообщите салону номер ' + str(state.application_id) + ': ' + self.salon['phone'] + ' или ' + self.salon['telegram'] + '. Сохранённые данные сейчас не изменялись.', history, state)
         if extracted.multiple_pets:
             self._invalidate(state)
             state.issues['multiple_pets'] = 'В одном запросе оформляем одного питомца. О каком питомце продолжим?'
