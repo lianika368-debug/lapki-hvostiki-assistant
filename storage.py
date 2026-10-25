@@ -12,7 +12,7 @@ class SupabaseStore:
         if not url.startswith("https://") or not key:
             raise RuntimeError("Supabase is not configured")
         row = application.model_dump(mode="json")
-        row.update(id=application_id, status="new", service=salon["services"][application.service]["name"])
+        row.update(id=application_id, status="new", service=salon["services"][application.service]["name"] if application.service else None)
         # Same ID is reused after a timeout: no duplicate even if the first insert committed.
         headers = {"apikey": key, "Authorization": f"Bearer {key}",
                    "Prefer": "resolution=ignore-duplicates,return=minimal"}
