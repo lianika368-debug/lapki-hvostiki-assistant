@@ -299,3 +299,24 @@ def test_duration_question_does_not_add_unasked_composition():
     h,s=turn(bot,'Сколько стоит комплекс для кошки и сколько длится?')
     assert '2 500' in h[-1]['content'] and 'Длительность' in h[-1]['content']
     assert 'профессиональной косметикой' not in h[-1]['content']
+
+
+def test_price_duration_does_not_turn_into_model_complex_recommendation():
+    bot=make(Extraction(intent='цена',price_services=['cat_full'],topics=['duration','included'],recommendation='complex'))
+    h,s=turn(bot,'Сколько стоит комплекс для кошки и сколько длится?')
+    assert '2 500' in h[-1]['content'] and 'Длительность' in h[-1]['content']
+    assert 'профессиональной косметикой' not in h[-1]['content']
+
+
+def test_booking_with_duration_question_answers_before_contact_question():
+    bot=make(Extraction(intent='запись',action='book',patch=Draft(service='cat_full'),topics=['duration']))
+    h,s=turn(bot,'Хочу записаться на комплекс для кошки, сколько длится?')
+    assert 'Длительность' in h[-1]['content'] and 'Чтобы администратор' in h[-1]['content']
+    assert 'duration' in s.explained
+
+
+def test_handoff_does_not_claim_unspoken_recommendation():
+    bot=make(Extraction(intent='запись',action='book',recommendation='complex',patch=Draft(phone='+79991234567',service='cat_full')))
+    h,s=turn(bot,'Хочу оставить заявку на комплекс для кошки')
+    assert s.pending and 'recommendation' not in s.explained
+    assert 'предложены варианты' not in s.pending.handoff
