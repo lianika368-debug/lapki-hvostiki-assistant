@@ -19,7 +19,7 @@ from notifications import TelegramNotifier
 
 ROOT = Path(__file__).parent
 assistant = Assistant(GeminiExtractor(), SupabaseStore(), notifier=TelegramNotifier())
-WELCOME = [{'role':'assistant','content':'Здравствуйте! Помогу выбрать уход, узнать стоимость и подготовить заявку. Что нужно вашему питомцу?'}]
+WELCOME = [{'role':'assistant','content':'Здравствуйте! Помогу выбрать уход, узнать стоимость и подготовить тестовую заявку. Что нужно вашему питомцу?'}]
 QUICK_QUESTIONS = {
     'prices': ('Какие у вас услуги и цены?', ['services']),
     'included': ('Что входит в комплексный груминг?', ['included']),
@@ -118,9 +118,10 @@ JS = (ROOT / 'ui.js').read_text()
 I18N = gr.I18n(**{lang: {'common.complete':'Готово','common.loading':'Обработка…',
     'chatbot.clear':'Начать заново','chatbot.copy_message':'Скопировать сообщение'} for lang in ('ru','en')})
 
-with gr.Blocks(title='Лапки & Хвостики — ассистент', analytics_enabled=False) as demo:
+with gr.Blocks(title='Лапки & Хвостики — учебный проект', analytics_enabled=False) as demo:
     gr.HTML('<header class="salon-nav"><div><strong>Лапки &amp; Хвостики</strong><span>Груминг · Екатеринбург</span></div><img src="/salon-assets/playful-corgi.webp" alt="Весёлый корги" width="64" height="64"></header>')
-    gr.HTML('<div class="intro"><h1>Задайте вопрос или подготовьте заявку</h1><p>Поможем выбрать уход. Запись и точное время подтверждает администратор.</p></div>')
+    gr.HTML('<aside class="educational-notice" aria-label="Об учебном проекте"><strong>Учебный проект</strong><p>Пример работы ИИ-ассистента. Заявки тестовые, реальная запись не оформляется. Пожалуйста, используйте вымышленные данные.</p></aside>')
+    gr.HTML('<div class="intro"><h1>Задайте вопрос или подготовьте заявку</h1><p>Поможем выбрать уход и покажем, как подготовить тестовую заявку.</p></div>')
     history = gr.State(value=lambda: list(WELCOME), time_to_live=3600)
     booking = gr.State(value=lambda: BookingState(), time_to_live=3600)
     revision = gr.Textbox(visible=False, value='')
@@ -138,7 +139,7 @@ with gr.Blocks(title='Лапки & Хвостики — ассистент', ana
         keep = gr.Button('Оставить как было', visible=False, size='sm')
         select_service = gr.Button('Выбрать экспресс-линьку', visible=False, size='sm')
     with gr.Group(visible=False, elem_id='review-panel') as review_panel:
-        gr.HTML('<h2>Актуальная заявка</h2>')
+        gr.HTML('<h2>Тестовая заявка</h2>')
         review = gr.HTML('', elem_id='application-summary')
         with gr.Row():
             confirm = gr.Button('Отправить заявку', variant='primary')
@@ -159,6 +160,7 @@ with gr.Blocks(title='Лапки & Хвостики — ассистент', ana
             reset_yes = gr.Button('Да, очистить')
             reset_no = gr.Button('Продолжить разговор')
     with gr.Accordion('Контакты, срок жизни черновика и обработка данных', open=False, elem_id='privacy'):
+        gr.Markdown('**Учебный проект.** Реальная запись в салон не оформляется. Используйте только вымышленные данные. Тестовые заявки после подтверждения действительно сохраняются в Supabase и отправляются в Telegram.')
         gr.Markdown(f"{SALON['address']}\n\n{SALON['hours']}\n\nТелефон: {SALON['phone']}. Telegram: {SALON['telegram']}.\n\n"
             'Черновик и переписка хранятся только в текущей сессии до 1 часа. При обновлении страницы, закрытии или перезапуске сервиса они могут исчезнуть. '
             'Отправка сама по себе при обновлении не повторяется.\n\n'
