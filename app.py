@@ -19,7 +19,7 @@ from notifications import TelegramNotifier
 
 ROOT = Path(__file__).parent
 assistant = Assistant(GeminiExtractor(), SupabaseStore(), notifier=TelegramNotifier())
-WELCOME = [{'role':'assistant','content':'Здравствуйте! Помогу выбрать уход, узнать стоимость и подготовить тестовую заявку. Что нужно вашему питомцу?'}]
+WELCOME = [{'role':'assistant','content':'Здравствуйте! Помогу выбрать уход, узнать стоимость и подготовить заявку. Что нужно вашему питомцу?'}]
 QUICK_QUESTIONS = {
     'prices': ('Какие у вас услуги и цены?', ['services']),
     'included': ('Что входит в комплексный груминг?', ['included']),
@@ -119,10 +119,10 @@ JS = (ROOT / 'ui.js').read_text()
 I18N = gr.I18n(**{lang: {'common.complete':'Готово','common.loading':'Обработка…',
     'chatbot.clear':'Начать заново','chatbot.copy_message':'Скопировать сообщение'} for lang in ('ru','en')})
 
-with gr.Blocks(title='Лапки & Хвостики — учебный проект', analytics_enabled=False) as demo:
-    gr.HTML('<header class="salon-nav"><div><strong>Лапки &amp; Хвостики</strong><span>Груминг · Екатеринбург</span></div><img src="/salon-assets/playful-corgi.webp" alt="Весёлый корги" width="88" height="88"></header>')
-    gr.HTML('<aside class="educational-notice" aria-label="Об учебном проекте"><strong>Учебный проект</strong><p>Пример работы ИИ-ассистента. Заявки тестовые, реальная запись не оформляется. Пожалуйста, используйте вымышленные данные.</p></aside>')
-    gr.HTML('<div class="intro"><h1>Задайте вопрос или подготовьте заявку</h1><p>Поможем выбрать уход и покажем, как подготовить тестовую заявку.</p></div>')
+with gr.Blocks(title='Лапки & Хвостики — AI-ассистент', analytics_enabled=False) as demo:
+    gr.HTML('<header class="salon-nav"><div class="salon-brand"><svg class="brand-paw" viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="9" cy="15" rx="4.5" ry="6" transform="rotate(-25 9 15)"/><ellipse cx="18" cy="9" rx="4.5" ry="6" transform="rotate(-8 18 9)"/><ellipse cx="28" cy="11" rx="4.5" ry="6" transform="rotate(20 28 11)"/><ellipse cx="34" cy="20" rx="4" ry="5.5" transform="rotate(35 34 20)"/><path d="M11 29c0-5 5-13 10-13s12 8 12 13c0 7-7 4-11 4s-11 3-11-4Z"/></svg><div><strong>Лапки &amp; Хвостики</strong><span>Груминг · Екатеринбург</span></div></div><a href="https://t.me/lapki_hvostiki_ekb" target="_blank" rel="noopener noreferrer">Telegram <span aria-hidden="true">↗</span></a></header>')
+    gr.HTML('<section class="salon-hero" aria-label="Забота о питомцах"><p class="hero-title"><span>Красота для лапок.</span><span>Забота для<br>хвостиков.</span></p><img src="/salon-assets/playful-corgi.webp" alt="Весёлый корги" width="144" height="144"></section>')
+    gr.HTML('<div class="intro"><h1>Задайте вопрос или запишите питомца <span class="intro-flower" aria-hidden="true">✳</span></h1><p>Поможем выбрать уход и подготовить заявку.</p></div>')
     history = gr.State(value=lambda: list(WELCOME), time_to_live=3600)
     booking = gr.State(value=lambda: BookingState(), time_to_live=3600)
     revision = gr.Textbox(visible=False, value='')
@@ -161,13 +161,14 @@ with gr.Blocks(title='Лапки & Хвостики — учебный прое�
             reset_yes = gr.Button('Да, очистить')
             reset_no = gr.Button('Продолжить разговор')
     with gr.Accordion('Контакты, срок жизни черновика и обработка данных', open=False, elem_id='privacy'):
-        gr.Markdown('**Учебный проект.** Реальная запись в салон не оформляется. Используйте только вымышленные данные. Тестовые заявки после подтверждения действительно сохраняются в Supabase и отправляются в Telegram.')
+        gr.Markdown('**Учебный кейс.** Реальная запись в салон не оформляется. Используйте только вымышленные данные. Тестовые заявки после подтверждения действительно сохраняются в Supabase и отправляются в Telegram.')
         gr.Markdown(f"{SALON['address']}\n\n{SALON['hours']}\n\nТелефон: {SALON['phone']}. Telegram: {SALON['telegram']}.\n\n"
             'Черновик и переписка хранятся только в текущей сессии до 1 часа. При обновлении страницы, закрытии или перезапуске сервиса они могут исчезнуть. '
             'Отправка сама по себе при обновлении не повторяется.\n\n'
             'Сообщения обрабатывает Google Gemini. После явного подтверждения заявка сохраняется в Supabase и отправляется администратору в Telegram. '
             'Не указывайте лишних персональных данных. Очистка чата не удаляет уже отправленную заявку. '
             'Неизвестные длительность, категорию размера и возможность записи уточняет администратор.')
+    gr.HTML('<aside class="educational-notice" aria-label="Об учебном кейсе"><strong>Учебный кейс · AI-ассистент</strong><p>Пример работы AI-ассистента для груминг-салона. Заявки тестовые, реальная запись не оформляется. Пожалуйста, используйте вымышленные данные.</p></aside>')
     outputs = [message, chat, history, booking, review_panel, keep, select_service, review, revision, status, starters, reset_panel]
     common = dict(outputs=outputs, concurrency_id='chat', concurrency_limit=1, api_name=False,
                   trigger_mode='once', show_progress='minimal')
