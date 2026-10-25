@@ -1,0 +1,22 @@
+{
+  "application": {
+    "id": "47017d3b-e485-4af4-8974-f09e3da619b0",
+    "status": "new",
+    "owner_name": null,
+    "pet_name": null,
+    "pet_age": null,
+    "preferred_date": null,
+    "preferred_time": null,
+    "preferred_groomer": null,
+    "service": "Комплексный груминг для кошек",
+    "comment": "ТЕСТ TELEGRAM CODEX, нет особенностей.",
+    "handoff": "Обсуждалось: сообщено, что длительность уточняет администратор; обсуждён ориентировочный прайс\nОриентировочная стоимость: от 2 500 ₽\nОсталось: Согласовать точные дату и время; Уточнить длительность процедуры"
+  },
+  "before_confirmation_count": 0,
+  "after_confirmation_count": 1,
+  "after_repeat_count": 1,
+  "telegram_message_id": 4,
+  "telegram_confirmed": true,
+  "telegram_confirmed_messages": 1,
+  "runtime_commit": "2b51e395652a7892fe20b45986900fdd8bbd5909"
+}
