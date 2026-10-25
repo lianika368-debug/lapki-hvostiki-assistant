@@ -126,6 +126,8 @@ class Assistant:
         if not state.draft.phone:
             state.awaiting_field = 'phone'
             return QUESTIONS['phone']
+        if state.draft.service and 'price' not in state.explained:
+            state.explained.append('price')
         try:
             state.pending = build_application(state, self.salon)
         except ValidationError:
@@ -231,6 +233,8 @@ class Assistant:
             return self._reply(message, self.salon['medical'], history, state)
         topics = list(dict.fromkeys([*extracted.topics, *lexical_topics(message)]))
         extracted.topics = topics
+        if extracted.recommendation and (requests_price(message) or 'duration' in topics) and not re.search(r'не знаю|не понимаю|помог|посовет|выбрать|подой[дт]|нужна ли|нужен ли', message, re.I):
+            extracted.recommendation = None
         if 'services' in topics and not re.search(r'все\s+услуг|какие.*услуг|прайс|перечень|список|услуги и цены', message, re.I):
             topics.remove('services')
         if extracted.recommendation and extracted.recommendation != 'complex' and 'included' in topics and 'included' not in lexical_topics(message):
@@ -303,9 +307,6 @@ class Assistant:
         state.draft = reconcile_service(state.draft)
         if extracted.recommendation:
             state.suggestion = extracted.recommendation
-        for topic in topics + (['price'] if intent == 'цена' or extracted.price_services else []) + (['recommendation'] if extracted.recommendation else []):
-            if topic not in state.explained:
-                state.explained.append(topic)
         explicit_booking = bool(wants_booking(message) or extracted.action == 'book')
         # Legacy extraction intent alone is never enough to override a refusal/question.
         if explicit_booking and not declined:
@@ -319,7 +320,12 @@ class Assistant:
             prefix = ('Применено: ' + ', '.join(applied) + '.\n') if applied else ''
             return self._reply(message, prefix + next(iter(state.issues.values())) + '\nМожно исправить значение или выбрать «Оставить как было».', history, state)
         is_question = extracted.action == 'consult' and (bool(topics) or intent in {'цена','общее'} or extracted.recommendation)
+        def note_explained():
+            for topic in topics + (['price'] if intent == 'цена' or extracted.price_services else []) + (['recommendation'] if extracted.recommendation else []):
+                if topic not in state.explained:
+                    state.explained.append(topic)
         if declined or is_question and not explicit_booking:
+            note_explained()
             reply = render_facts(extracted, self.salon, state.draft)
             if declined:
                 reply = 'Подготовку заявки остановила.\n\n' + reply
@@ -328,10 +334,17 @@ class Assistant:
                 self._prepare(state)
             return self._reply(message, reply, history, state)
         if state.active:
-            reply = self._prepare(state)
+            if explicit_booking and (requests_price(message) or lexical_topics(message)):
+                note_explained()
+                reply = render_facts(extracted, self.salon, state.draft) + '\n\n' + self._prepare(state)
+            else:
+                reply = self._prepare(state)
         elif accepted:
+            if topics or extracted.recommendation:
+                note_explained()
             reply = 'Учла данные питомца. ' + (render_facts(extracted, self.salon, state.draft) if topics or extracted.recommendation else 'Что хотите уточнить об уходе или услуге?')
         else:
+            note_explained()
             reply = render_facts(extracted, self.salon, state.draft)
         return self._reply(message, reply, history, state)
 

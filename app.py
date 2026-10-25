@@ -41,8 +41,9 @@ def result(history, booking, input_value=''):
               'Проверьте актуальную заявку ниже.' if ready else 'Можно продолжать разговор.')
     display_history = [dict(item) for item in history]
     for item in display_history:
-        if item['role'] == 'assistant' and item['content'].startswith('Проверьте заявку:'):
-            item['content'] = 'Сводка заявки подготовлена. Проверьте актуальную версию в отдельном блоке ниже. Данные можно изменить или отменить.'
+        if item['role'] == 'assistant' and 'Проверьте заявку:' in item['content']:
+            prefix = item['content'].split('Проверьте заявку:',1)[0]
+            item['content'] = prefix + 'Сводка заявки подготовлена. Проверьте актуальную версию в отдельном блоке ниже. Данные можно изменить или отменить.'
     return (input_value if booking.last_error else '', display_history, history, booking,
             gr.update(visible=ready), gr.update(visible=bool(booking.issues)),
             gr.update(visible=bool(booking.suggestion == 'shedding' and not booking.draft.service)),
