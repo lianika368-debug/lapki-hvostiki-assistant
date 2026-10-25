@@ -1,5 +1,4 @@
 """Gradio chat with a separate, current review and session-only private data."""
-import html
 import os
 from pathlib import Path
 from functools import partial
@@ -10,7 +9,8 @@ import gradio as gr
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import uvicorn
-from assistant import Assistant, BookingState, SALON, summary
+from assistant import Assistant, BookingState, SALON
+from ui_summary import render_summary
 from conversation import render_facts
 from models import Extraction
 from gemini_client import GeminiExtractor
@@ -35,7 +35,7 @@ def controls(state):
 
 def result(history, booking, input_value=''):
     ready = bool(booking.pending and not booking.saved and not booking.issues and not booking.editing)
-    review = '<pre>' + html.escape(summary(booking.pending, SALON)) + '</pre>' if ready else ''
+    review = render_summary(booking.pending, SALON) if ready else ''
     status = ('Не отправлено. Можно повторить: ввод сохранён.' if booking.last_error else
               'Заявка сохранена.' if booking.saved else
               'Проверьте актуальную заявку ниже.' if ready else 'Можно продолжать разговор.')
@@ -103,7 +103,8 @@ def choose_shedding(history, booking):
     return result(history, booking)
 
 
-THEME = gr.themes.Soft(primary_hue='pink', secondary_hue='lime', neutral_hue='stone').set(
+THEME = gr.themes.Soft(primary_hue='pink', secondary_hue='lime', neutral_hue='stone',
+                       font=['Arial', 'Helvetica', 'sans-serif']).set(
     body_background_fill='#fff5f8', body_background_fill_dark='#fff5f8',
     body_text_color='#354130', body_text_color_dark='#354130',
     block_background_fill='#ffffff', block_background_fill_dark='#ffffff',
@@ -119,7 +120,7 @@ I18N = gr.I18n(**{lang: {'common.complete':'Готово','common.loading':'Об
     'chatbot.clear':'Начать заново','chatbot.copy_message':'Скопировать сообщение'} for lang in ('ru','en')})
 
 with gr.Blocks(title='Лапки & Хвостики — учебный проект', analytics_enabled=False) as demo:
-    gr.HTML('<header class="salon-nav"><div><strong>Лапки &amp; Хвостики</strong><span>Груминг · Екатеринбург</span></div><img src="/salon-assets/playful-corgi.webp" alt="Весёлый корги" width="64" height="64"></header>')
+    gr.HTML('<header class="salon-nav"><div><strong>Лапки &amp; Хвостики</strong><span>Груминг · Екатеринбург</span></div><img src="/salon-assets/playful-corgi.webp" alt="Весёлый корги" width="88" height="88"></header>')
     gr.HTML('<aside class="educational-notice" aria-label="Об учебном проекте"><strong>Учебный проект</strong><p>Пример работы ИИ-ассистента. Заявки тестовые, реальная запись не оформляется. Пожалуйста, используйте вымышленные данные.</p></aside>')
     gr.HTML('<div class="intro"><h1>Задайте вопрос или подготовьте заявку</h1><p>Поможем выбрать уход и покажем, как подготовить тестовую заявку.</p></div>')
     history = gr.State(value=lambda: list(WELCOME), time_to_live=3600)
@@ -130,21 +131,9 @@ with gr.Blocks(title='Лапки & Хвостики — учебный прое�
         included = gr.Button('Что входит в комплекс?', min_width=180)
         preparation = gr.Button('Как подготовиться?', min_width=160)
     chat = gr.Chatbot(value=WELCOME, label='Переписка с ассистентом', show_label=False,
-                      height='clamp(320px, 56svh, 620px)', min_height=280, autoscroll=True,
+                      height=170, min_height=150, autoscroll=True,
                       sanitize_html=True, render_markdown=False, allow_tags=False,
                       buttons=[], elem_id='salon-chat')
-    status = gr.HTML('<p role="status" aria-live="polite">Можно задать любой вопрос об уходе.</p>', elem_id='conversation-status')
-    with gr.Row(elem_id='context-actions'):
-        book = gr.Button('Подготовить заявку', size='sm')
-        keep = gr.Button('Оставить как было', visible=False, size='sm')
-        select_service = gr.Button('Выбрать экспресс-линьку', visible=False, size='sm')
-    with gr.Group(visible=False, elem_id='review-panel') as review_panel:
-        gr.HTML('<h2>Тестовая заявка</h2>')
-        review = gr.HTML('', elem_id='application-summary')
-        with gr.Row():
-            confirm = gr.Button('Отправить заявку', variant='primary')
-            edit = gr.Button('Изменить')
-            cancel = gr.Button('Отменить')
     with gr.Column(elem_id='message-card'):
         with gr.Row(elem_id='composer'):
             message = gr.Textbox(label='Ваше сообщение', show_label=False,
@@ -153,6 +142,18 @@ with gr.Blocks(title='Лапки & Хвостики — учебный прое�
                                  html_attributes={'enterkeyhint':'send'})
             submit = gr.Button('Отправить', variant='primary', scale=1, min_width=100)
         gr.HTML('<p class="input-hint">Enter — отправить · Shift+Enter — новая строка</p>')
+    status = gr.HTML('<p role="status" aria-live="polite">Можно задать любой вопрос об уходе.</p>', elem_id='conversation-status')
+    with gr.Row(elem_id='context-actions'):
+        book = gr.Button('Подготовить заявку', size='sm')
+        keep = gr.Button('Оставить как было', visible=False, size='sm')
+        select_service = gr.Button('Выбрать экспресс-линьку', visible=False, size='sm')
+    with gr.Column(visible=False, elem_id='review-panel') as review_panel:
+        gr.HTML('<h2>Тестовая заявка</h2>')
+        review = gr.HTML('', elem_id='application-summary')
+        with gr.Row():
+            confirm = gr.Button('Отправить заявку', variant='primary')
+            edit = gr.Button('Изменить')
+            cancel = gr.Button('Отменить')
     reset = gr.Button('Начать заново', size='sm', elem_id='reset-chat')
     with gr.Group(visible=False, elem_id='reset-confirm') as reset_panel:
         gr.HTML('<p>Очистить переписку и черновик? Уже отправленная заявка останется у салона.</p>')
