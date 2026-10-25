@@ -1,0 +1,188 @@
+[
+  {
+    "message": "Корги, 12 кг, нужен комплекс в субботу после обеда",
+    "answer": "Чтобы администратор мог связаться с вами по заявке, укажите телефон с кодом страны. Например, +7 (999) 123-45-67.",
+    "draft": {
+      "owner_name": null,
+      "phone": null,
+      "pet_name": null,
+      "pet_breed": "Корги",
+      "pet_age": null,
+      "pet_type": "собака",
+      "pet_weight": "12 кг",
+      "pet_size": null,
+      "service": null,
+      "request_text": "Комплексный груминг для собак",
+      "preferred_date": "2026-10-31",
+      "preferred_time": null,
+      "schedule_note": "в субботу после обеда",
+      "preferred_groomer": null,
+      "comment": null
+    },
+    "pending": false,
+    "issues": {}
+  },
+  {
+    "message": "Я не хочу записываться. Только узнать цену и длительность комплекса для корги.",
+    "answer": "Подготовку заявки остановила.\n\nКомплексный груминг для собак мелких пород: от 2 200 ₽.\nКомплексный груминг для собак средних пород: от 3 200 ₽.\nКомплексный груминг для крупных собак: от 4 500 ₽.\n\nВ прайсе есть мелкие, средние и крупные собаки, но границы по весу не указаны. По породе и килограммам я не могу надёжно выбрать категорию — её уточнит администратор.\n\nДлительность процедур в данных салона не указана. Её уточнит администратор с учётом питомца и услуги.",
+    "draft": {
+      "owner_name": null,
+      "phone": null,
+      "pet_name": null,
+      "pet_breed": "Корги",
+      "pet_age": null,
+      "pet_type": "собака",
+      "pet_weight": "12 кг",
+      "pet_size": null,
+      "service": null,
+      "request_text": "Комплексный груминг для собак",
+      "preferred_date": "2026-10-31",
+      "preferred_time": null,
+      "schedule_note": "в субботу после обеда",
+      "preferred_groomer": null,
+      "comment": null
+    },
+    "pending": false,
+    "issues": {}
+  },
+  {
+    "message": "Собака сильно линяет, не понимаю, нужна ли ей стрижка",
+    "answer": "Если основная задача — линька, можно рассмотреть экспресс-линьку. Нужна ли ещё стрижка, уточнит мастер: правил по типам шерсти в справочнике нет.\nЭкспресс-линька: от 1 500 ₽.",
+    "draft": {
+      "owner_name": null,
+      "phone": null,
+      "pet_name": null,
+      "pet_breed": null,
+      "pet_age": null,
+      "pet_type": "собака",
+      "pet_weight": null,
+      "pet_size": null,
+      "service": null,
+      "request_text": "Собака сильно линяет, не понимаю, нужна ли ей стрижка",
+      "preferred_date": null,
+      "preferred_time": null,
+      "schedule_note": null,
+      "preferred_groomer": null,
+      "comment": null
+    },
+    "pending": false,
+    "issues": {}
+  },
+  {
+    "message": "Сколько стоит комплекс для кошки и сколько длится?",
+    "answer": "Комплексный груминг для кошек: от 2 500 ₽.\n\nДлительность процедур в данных салона не указана. Её уточнит администратор с учётом питомца и услуги.",
+    "draft": {
+      "owner_name": null,
+      "phone": null,
+      "pet_name": null,
+      "pet_breed": null,
+      "pet_age": null,
+      "pet_type": null,
+      "pet_weight": null,
+      "pet_size": null,
+      "service": "cat_full",
+      "request_text": null,
+      "preferred_date": null,
+      "preferred_time": null,
+      "schedule_note": null,
+      "preferred_groomer": null,
+      "comment": null
+    },
+    "pending": false,
+    "issues": {}
+  },
+  {
+    "message": "А по времени?",
+    "answer": "Длительность процедур в данных салона не указана. Её уточнит администратор с учётом питомца и услуги.",
+    "draft": {
+      "owner_name": null,
+      "phone": null,
+      "pet_name": null,
+      "pet_breed": null,
+      "pet_age": null,
+      "pet_type": null,
+      "pet_weight": null,
+      "pet_size": null,
+      "service": "cat_full",
+      "request_text": null,
+      "preferred_date": null,
+      "preferred_time": null,
+      "schedule_note": null,
+      "preferred_groomer": null,
+      "comment": null
+    },
+    "pending": false,
+    "issues": {}
+  },
+  {
+    "message": "Хочу оставить заявку на комплекс для кошки. Телефон +7 999 123-45-67. Время 15:00, дату согласовать.",
+    "answer": "Проверьте заявку:\n\nТелефон: +79991234567\nВид: кошка\nУслуга: Комплексный груминг для кошек\nЖелаемое время: 15:00\nПожелание по времени: дату согласовать\nОриентировочная цена: от 2 500 ₽\nОбсуждалось: обсуждён ориентировочный прайс\nОриентировочная стоимость: от 2 500 ₽\nОсталось: Согласовать точные дату и время\n\nПередадим эти данные и краткое резюме разговора администратору. Дата и время — пожелание, запись ещё не подтверждена. Телефон нужен для дальнейшей связи; способ и срок ответа пока не согласованы. Для отправки нажмите «Отправить заявку» или напишите «Подтверждаю». Можно изменить данные или отменить заявку.",
+    "draft": {
+      "owner_name": null,
+      "phone": "+79991234567",
+      "pet_name": null,
+      "pet_breed": null,
+      "pet_age": null,
+      "pet_type": "кошка",
+      "pet_weight": null,
+      "pet_size": null,
+      "service": "cat_full",
+      "request_text": null,
+      "preferred_date": null,
+      "preferred_time": "15:00",
+      "schedule_note": "дату согласовать",
+      "preferred_groomer": null,
+      "comment": null
+    },
+    "pending": true,
+    "issues": {}
+  },
+  {
+    "message": "Поменяйте время с 15:00 на 25:99",
+    "answer": "Желаемое время «25:99» не принято. Такого времени нет в графике салона. Укажите время с 10:00 до 20:00 или напишите «время согласовать».\nМожно исправить значение или выбрать «Оставить как было».",
+    "draft": {
+      "owner_name": null,
+      "phone": "+79991234567",
+      "pet_name": null,
+      "pet_breed": null,
+      "pet_age": null,
+      "pet_type": "кошка",
+      "pet_weight": null,
+      "pet_size": null,
+      "service": "cat_full",
+      "request_text": null,
+      "preferred_date": null,
+      "preferred_time": "15:00",
+      "schedule_note": "дату согласовать",
+      "preferred_groomer": null,
+      "comment": null
+    },
+    "pending": false,
+    "issues": {
+      "preferred_time": "Желаемое время «25:99» не принято. Такого времени нет в графике салона. Укажите время с 10:00 до 20:00 или напишите «время согласовать»."
+    }
+  },
+  {
+    "message": "Оставить как было",
+    "answer": "Проверьте заявку:\n\nТелефон: +79991234567\nВид: кошка\nУслуга: Комплексный груминг для кошек\nЖелаемое время: 15:00\nПожелание по времени: дату согласовать\nОриентировочная цена: от 2 500 ₽\nОбсуждалось: обсуждён ориентировочный прайс\nОриентировочная стоимость: от 2 500 ₽\nОсталось: Согласовать точные дату и время\n\nПередадим эти данные и краткое резюме разговора администратору. Дата и время — пожелание, запись ещё не подтверждена. Телефон нужен для дальнейшей связи; способ и срок ответа пока не согласованы. Для отправки нажмите «Отправить заявку» или напишите «Подтверждаю». Можно изменить данные или отменить заявку.",
+    "draft": {
+      "owner_name": null,
+      "phone": "+79991234567",
+      "pet_name": null,
+      "pet_breed": null,
+      "pet_age": null,
+      "pet_type": "кошка",
+      "pet_weight": null,
+      "pet_size": null,
+      "service": "cat_full",
+      "request_text": null,
+      "preferred_date": null,
+      "preferred_time": "15:00",
+      "schedule_note": "дату согласовать",
+      "preferred_groomer": null,
+      "comment": null
+    },
+    "pending": true,
+    "issues": {}
+  }
+]

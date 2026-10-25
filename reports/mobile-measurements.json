@@ -1,0 +1,49 @@
+[
+  {
+    "chatHeight": 434,
+    "inputBottom": 844,
+    "inputWidth": 135,
+    "pageWidth": 305,
+    "viewportHeight": 844,
+    "width": 320
+  },
+  {
+    "chatHeight": 434,
+    "inputBottom": 844,
+    "inputWidth": 175,
+    "pageWidth": 345,
+    "viewportHeight": 844,
+    "width": 360
+  },
+  {
+    "chatHeight": 434,
+    "inputBottom": 844,
+    "inputWidth": 190,
+    "pageWidth": 360,
+    "viewportHeight": 844,
+    "width": 375
+  },
+  {
+    "chatHeight": 434,
+    "inputBottom": 844,
+    "inputWidth": 205,
+    "pageWidth": 375,
+    "viewportHeight": 844,
+    "width": 390
+  },
+  {
+    "chatHeight": 434,
+    "inputBottom": 844,
+    "inputWidth": 245,
+    "pageWidth": 415,
+    "viewportHeight": 844,
+    "width": 430
+  },
+  {
+    "chatHeight": 320,
+    "orientation": "landscape",
+    "pageWidth": 829,
+    "viewportHeight": 390,
+    "width": 844
+  }
+]

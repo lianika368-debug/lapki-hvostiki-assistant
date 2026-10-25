@@ -1,0 +1,24 @@
+{
+  "version": "061f428",
+  "gradio": "6.30.0",
+  "decline_reply": "Как зовут владельца?",
+  "price_and_duration_reply": "Комплексный груминг для кошек: от 2 500 ₽.",
+  "required_fields_before": 10,
+  "pet_example_missing_before": [
+    "owner_name",
+    "phone",
+    "pet_name",
+    "pet_age",
+    "preferred_time",
+    "preferred_groomer",
+    "comment"
+  ],
+  "already_protected": [
+    "exact_confirmation_only",
+    "supabase_read_after_insert",
+    "same_uuid_on_retry",
+    "telegram_after_save",
+    "per_session_state",
+    "no_html_rendering"
+  ]
+}
