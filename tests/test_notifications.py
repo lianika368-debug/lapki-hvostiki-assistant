@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import httpx
 import pytest
 from assistant import Assistant, BookingState, SALON
-from models import Application, TZ
+from models import Application, Draft, TZ
 from notifications import TelegramNotifier
 
 
@@ -19,7 +19,10 @@ def test_delivery_only_after_save_and_confirmation():
     store, notifier = Mock(), Mock()
     bot = Assistant(Mock(), store, notifier=notifier)
     pending = application()
-    state = BookingState(pending=pending, application_id="test-id")
+    state = BookingState(draft=Draft(**pending.model_dump(mode='json',exclude={'handoff'})), active=True)
+    bot._prepare(state)
+    state.application_id = 'test-id'
+    pending = state.pending
     store.save.side_effect = RuntimeError("database unavailable")
     bot.respond("Подтверждаю", [], state)
     notifier.send.assert_not_called()
@@ -35,7 +38,9 @@ def test_telegram_failure_does_not_lose_saved_application(caplog):
     notifier = Mock()
     notifier.send.side_effect = RuntimeError("SECRET_TOKEN")
     bot = Assistant(Mock(), Mock(), notifier=notifier)
-    state = BookingState(pending=application(), application_id="test-id")
+    state = BookingState(draft=Draft(**application().model_dump(mode='json',exclude={'handoff'})), active=True)
+    bot._prepare(state)
+    state.application_id = 'test-id'
     history, state = bot.respond("Подтверждаю", [], state)
     assert state.saved and "Заявка сохранена" in history[-1]["content"]
     assert "SECRET_TOKEN" not in caplog.text

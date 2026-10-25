@@ -37,8 +37,9 @@ def test_no_invented_defaults(complete):
     del complete["preferred_groomer"]
     bot, store = setup_result(Extraction(intent="запись", patch=Draft(**complete)))
     h, s = turn(bot, "Хочу записаться", BookingState())
-    assert "К какому мастеру" in h[-1]["content"]
-    assert s.pending is None
+    assert "Проверьте заявку" in h[-1]["content"]
+    assert s.pending.preferred_groomer is None and s.pending.comment is None
+    assert "Нет особенностей" not in h[-1]["content"]
 
 def test_edit_requires_new_confirmation(complete):
     bot, store = setup_result(Extraction(intent="запись", patch=Draft(**complete)))
@@ -69,7 +70,7 @@ def test_sessions_are_isolated():
 def test_remembers_known_fields():
     bot, _ = setup_result(Extraction(intent="запись", patch=Draft(phone="+79991234567")))
     h, s = turn(bot, "Вот телефон", BookingState(draft=Draft(owner_name="Антон"), active=True))
-    assert s.draft.owner_name == "Антон" and "Как зовут питомца" in h[-1]["content"]
+    assert s.draft.owner_name == "Антон" and "Что передать администратору" in h[-1]["content"]
 
 def test_medical_never_diagnoses():
     bot, store = setup_result(Extraction(intent="общее", medical=True))
@@ -88,7 +89,7 @@ def test_grounded_price_and_unknown():
 def test_availability_is_not_promised():
     bot, _ = setup_result(Extraction(intent="общее", topics=["availability"]))
     h, _ = turn(bot, "Свободно завтра?", BookingState())
-    assert "нет данных о свободных" in h[-1]["content"]
+    assert "Данных о свободных местах нет" in h[-1]["content"]
 
 def test_api_failure_preserves_draft():
     bot, _ = setup_result(Extraction(intent="общее"))
@@ -122,4 +123,4 @@ def test_slots_question_does_not_start_booking():
     bot, _ = setup_result(Extraction(intent="запись", topics=["availability"]))
     h, s = turn(bot, "Есть свободное время завтра?", BookingState())
     assert not s.active
-    assert "нет данных о свободных" in h[-1]["content"]
+    assert "Данных о свободных местах нет" in h[-1]["content"]
