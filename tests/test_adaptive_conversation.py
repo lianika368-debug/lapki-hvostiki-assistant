@@ -320,3 +320,13 @@ def test_handoff_does_not_claim_unspoken_recommendation():
     h,s=turn(bot,'Хочу оставить заявку на комплекс для кошки')
     assert s.pending and 'recommendation' not in s.explained
     assert 'предложены варианты' not in s.pending.handoff
+
+
+def test_edit_after_handoff_does_not_claim_to_update_saved_request():
+    bot=make(Extraction(intent='запись',action='edit',patch=Draft(preferred_time='16:00')))
+    s=prepared(bot);s.saved=True;s.active=False
+    original=s.draft.model_dump();number=s.application_id
+    h,s=turn(bot,'Поменяйте время на 16:00',s)
+    assert s.draft.model_dump()==original and s.application_id==number
+    assert 'не изменялись' in h[-1]['content'] and number in h[-1]['content']
+    bot.store.save.assert_not_called();bot.notifier.send.assert_not_called()
