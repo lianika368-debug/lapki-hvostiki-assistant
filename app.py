@@ -16,7 +16,7 @@ from conversation import render_facts
 from models import Extraction
 from gemini_client import GeminiExtractor
 from lapka import LapkaResponder
-from ui_gate import run_session
+from ui_gate import run_session, session_slot
 from storage import SupabaseStore
 from notifications import TelegramNotifier
 
@@ -39,10 +39,11 @@ def controls(state):
 def result(history, booking, input_value=''):
     ready = bool(booking.pending and not booking.saved and not booking.issues and not booking.editing)
     review = render_summary(booking.pending, SALON) if ready else ''
-    status = ('Не отправлено. Можно повторить: ввод сохранён.' if booking.last_error else
-              'Заявка сохранена.' if booking.saved else
-              'Проверьте актуальную заявку ниже.' if ready else
-              'Можно продолжать разговор.' if len(history) > 1 else '')
+    status = ('Не удалось завершить обработку. Ввод сохранён для повтора; новая заявка не отправлена.' if booking.last_error else
+              'Тестовая заявка сохранена. Это не подтверждённая запись в салон.' if booking.saved else
+              'Заявка подготовлена, но ещё не отправлена. Проверьте её ниже и подтвердите отправку.' if ready else
+              'Сообщение обработано. Черновик заявки ещё не отправлен.' if booking.active else
+              'Сообщение обработано. Можно продолжать разговор.' if len(history) > 1 else '')
     display_history = [dict(item) for item in history]
     for item in display_history:
         if item['role'] == 'assistant' and 'Проверьте заявку:' in item['content']:
@@ -115,6 +116,32 @@ def _busy_result():
 
 def send(message, history, booking, revision=None, request: gr.Request = None):
     return run_session(request, lambda: _send(message, history, booking, revision), _busy_result)
+
+
+def send_message(message, history, booking, revision=None, request: gr.Request = None):
+    """Clear accepted input before Gemini runs; hold the session lock through both updates."""
+    with session_slot(request) as acquired:
+        if not acquired:
+            yield _busy_result()
+            return
+        if not (message or '').strip():
+            yield result(history or list(WELCOME), booking or BookingState())
+            return
+        processing = [gr.skip() for _ in outputs]
+        processing[0] = gr.update(value='', interactive=False)
+        processing[1] = result(history or list(WELCOME), booking or BookingState())[1] + [{'role':'user', 'content':message}]
+        processing[9] = '<p role="status" aria-live="polite">Сообщение отправлено. Лапка готовит ответ…</p>'
+        yield tuple(processing)
+        try:
+            completed = list(_send(message, history, booking, revision))
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning('chat_ui_failed error_type=%s', type(exc).__name__)
+            completed = [gr.skip() for _ in outputs]
+            completed[0] = message
+            completed[9] = '<p role="status" aria-live="polite">Не удалось завершить обработку. Ввод восстановлен: повторите сообщение.</p>'
+        completed[0] = gr.update(value=completed[0], interactive=True)
+        yield tuple(completed)
 
 
 def quick_answer(topic, history, booking, request: gr.Request = None):
@@ -208,8 +235,8 @@ with gr.Blocks(title='Лапки & Хвостики — AI-ассистент', 
     outputs = [message, chat, history, booking, review_panel, keep, select_service, review, revision, status, starters, reset_panel]
     common = dict(outputs=outputs, concurrency_id='chat', concurrency_limit=4, api_name=False,
                   trigger_mode='once', show_progress='minimal')
-    submit.click(send, inputs=[message,history,booking,revision], **common)
-    message.submit(send, inputs=[message,history,booking,revision], **common)
+    submit.click(send_message, inputs=[message,history,booking,revision], **common)
+    message.submit(send_message, inputs=[message,history,booking,revision], **common)
     book.click(partial(preset,'Хочу оставить заявку'), inputs=[history,booking,revision], **common)
     confirm.click(partial(preset,'Подтверждаю'), inputs=[history,booking,revision], **common)
     edit.click(partial(preset,'Изменить заявку'), inputs=[history,booking,revision], **common)

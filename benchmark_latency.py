@@ -46,7 +46,7 @@ def main():
         Path('reports/latency-after.json').write_text(json.dumps(records,ensure_ascii=False,indent=2))
         print(json.dumps(row,ensure_ascii=False),flush=True)
         assert not state.last_error
-        assert extractor.calls==(1 if message.startswith('Сколько') else 0)
+        assert extractor.calls==1
         if message.startswith('Сколько'):
             assert '2 500' in row['answer'] and 'администратор' in row['answer'].lower()
         store.save.assert_not_called();notifier.send.assert_not_called()

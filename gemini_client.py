@@ -10,6 +10,9 @@ from models import Draft, Extraction, TZ
 from lapka import PROMPT_PATH, PROTOCOL
 
 
+REQUEST_BUDGET_SECONDS = 20
+
+
 class GeminiExtractor:
     def extract(self, message: str, history: list[dict], draft: Draft, salon: dict, context=None) -> Extraction:
         key = os.getenv('GEMINI_API_KEY')
@@ -32,6 +35,9 @@ patch — только явно сообщённые факты и исправ�
 Кошка с явно выбранным комплексом — cat_full. Для рекомендации по линьке recommendation=shedding,
 по колтунам=mats, гигиене=hygiene, по полному уходу=complex. Это рекомендация, не выбранная услуга.
 Если услуга не выбрана, request_text кратко передаёт задачу словами пользователя (например «Собака сильно линяет»).
+Вопросы о твоих возможностях, роли и помощи относятся к салону: topics=[capabilities], boundary=none.
+При консультации не заканчивай ответ предложением записаться: дождись явного желания клиента.
+Приветствия, благодарности и обратная связь о диалоге — обычное общение: ответь естественно в reply по истории, не возвращай unknown.
 topics — ВСЕ части вопроса: цена задаётся intent или price_services; длительность=duration, состав=included и т.д.
 Вопрос «А сколько по времени?» — duration, не повтор цены. Используй известную услугу для price_services.
 medical=true при вопросах о диагнозе, симптомах, лечении. Сообщённая аллергия/страх для заявки не лечение.
@@ -52,16 +58,19 @@ boundary=off_topic для анекдотов и других запросов в
 «Сколько стоит стрижка корги?» — уточнить услугу, не выбирать размер собаки по породе.'''
         instructions += '\n\n' + PROMPT_PATH.read_text() + '\n\n' + PROTOCOL
         payload = {'ДАННЫЕ': {'today':datetime.now(TZ).isoformat(), 'salon':salon,
-                              'draft':draft.model_dump(), **(context or {})},
+                              'draft':draft.model_dump(),
+                              'assistant': {'name':'Лапка', 'capabilities':['консультация об услугах и ориентировочных ценах', 'подготовка к визиту', 'подготовка тестовой заявки с подтверждением перед отправкой'],
+                                            'demo':True, 'booking_confirmed':False, 'schedule_access':False},
+                              **(context or {})},
                    'history':history[-40:], 'message':message}
         started = time.monotonic()
         attempts = 0
         try:
             with genai.Client(api_key=key, http_options=types.HttpOptions(
-                    timeout=10000, retry_options=types.HttpRetryOptions(attempts=1))) as client:
+                    timeout=REQUEST_BUDGET_SECONDS * 1000, retry_options=types.HttpRetryOptions(attempts=1))) as client:
                 contents = json.dumps(payload, ensure_ascii=False)
                 for attempt in range(2):
-                    remaining_ms = int((10 - (time.monotonic() - started)) * 1000)
+                    remaining_ms = int((REQUEST_BUDGET_SECONDS - (time.monotonic() - started)) * 1000)
                     if remaining_ms <= 0:
                         raise TimeoutError('Gemini time budget exhausted')
                     config=types.GenerateContentConfig(system_instruction=instructions, temperature=0,
@@ -73,11 +82,11 @@ boundary=off_topic для анекдотов и других запросов в
                     attempts += 1
                     try:
                         result = client.models.generate_content(
-                            model=os.getenv('GEMINI_MODEL', 'gemini-3.5-flash-lite'),
+                            model=os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite'),
                             contents=contents, config=config)
                         break
                     except Exception as exc:
-                        remaining = 10 - (time.monotonic() - started)
+                        remaining = REQUEST_BUDGET_SECONDS - (time.monotonic() - started)
                         code = getattr(exc, 'code', None)
                         if attempt or code not in {429,500,502,503,504} or remaining < 1.5:
                             raise

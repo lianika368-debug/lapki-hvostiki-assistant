@@ -32,7 +32,11 @@ def lexical_topics(message):
                 'hours': r'график|часы работы|когда.*работа', 'address': r'адрес|где.*наход',
                 'availability': r'свободн|есть.*мест', 'payment': r'оплат|сбп',
                 'cancellation': r'правила отмен|перенос.*запис'}
-    return [key for key, pattern in patterns.items() if re.search(pattern, message, re.I)]
+    topics = [key for key, pattern in patterns.items() if re.search(pattern, message, re.I)]
+    # Waiting for the chat response is not the duration of a grooming procedure.
+    if 'duration' in topics and re.search(r'отвеч|ответ|ожидани|жду|тормоз', message, re.I) and not re.search(r'процедур|груминг|стрижк|мыть|сушк', message, re.I):
+        topics.remove('duration')
+    return topics
 
 
 def requests_price(message):
@@ -200,6 +204,8 @@ def render_facts(extracted, salon, draft=None):
             parts.append('\n'.join(f"{v['name']}: {v['price']}." for v in salon['services'].values()))
         elif topic == 'availability':
             parts.append('Данных о свободных местах нет. Можно передать пожелание по времени — конкретный вариант подтвердит администратор.')
+        elif topic == 'capabilities':
+            parts.append('Я Лапка, AI-ассистент салона «Лапки & Хвостики». Помогу узнать услуги и ориентировочные цены, подготовиться к визиту и составить тестовую заявку. Отправлю её только после вашего подтверждения; запись на конкретное время согласует администратор.')
         elif topic == 'greeting':
             parts.append('Здравствуйте! Помогу выбрать услугу, узнать стоимость и подготовить заявку. Что нужно вашему питомцу?')
     return '\n\n'.join(dict.fromkeys(parts)) or f"Таких сведений у меня нет. Уточните в салоне: {salon['phone']} или {salon['telegram']}."

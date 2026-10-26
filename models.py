@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, field_validator,
 
 TZ = ZoneInfo('Asia/Yekaterinburg')
 ServiceId = Literal['shedding', 'hygiene', 'cat_full', 'dog_small', 'dog_medium', 'dog_large', 'nails', 'ears', 'teeth', 'mats', 'color']
-Topic = Literal['address', 'hours', 'contacts', 'payment', 'cancellation', 'included', 'groomers', 'preparation', 'services', 'availability', 'duration', 'unknown', 'greeting']
+Topic = Literal['address', 'hours', 'contacts', 'payment', 'cancellation', 'included', 'groomers', 'preparation', 'services', 'availability', 'duration', 'unknown', 'greeting', 'capabilities']
 
 
 def normalize_phone(value):
