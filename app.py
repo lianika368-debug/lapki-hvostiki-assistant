@@ -15,12 +15,13 @@ from ui_summary import render_summary
 from conversation import render_facts
 from models import Extraction
 from gemini_client import GeminiExtractor
+from lapka import GeminiResponder
 from storage import SupabaseStore
 from notifications import TelegramNotifier
 
 ROOT = Path(__file__).parent
-assistant = Assistant(GeminiExtractor(), SupabaseStore(), notifier=TelegramNotifier())
-WELCOME = [{'role':'assistant','content':'Здравствуйте! Помогу выбрать уход, узнать стоимость и подготовить заявку. Что нужно вашему питомцу?'}]
+assistant = Assistant(GeminiExtractor(), SupabaseStore(), notifier=TelegramNotifier(), responder=GeminiResponder())
+WELCOME = [{'role':'assistant','content':'Здравствуйте! Я Лапка, ассистент салона «Лапки & Хвостики». Помогу выбрать уход, узнать стоимость и подготовить заявку. Что нужно вашему питомцу?'}]
 QUICK_QUESTIONS = {
     'prices': ('Какие у вас услуги и цены?', ['services']),
     'included': ('Что входит в комплексный груминг?', ['included']),

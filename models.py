@@ -57,6 +57,7 @@ class Extraction(BaseModel):
     clear_fields: list[str] = Field(default_factory=list, max_length=16)
     conflicts: list[Conflict] = Field(default_factory=list, max_length=6)
     multiple_pets: bool = False
+    boundary: Literal['none', 'instruction_override', 'off_topic'] = 'none'
 
 
 class Application(Draft):

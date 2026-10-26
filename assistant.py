@@ -9,6 +9,7 @@ import time
 from datetime import datetime, date, time as clock_time
 from pydantic import ValidationError
 from models import Application, Draft, Extraction, TZ
+from lapka import safe_text, INSTRUCTION_OVERRIDE, OFF_TOPIC, BOUNDARY_REPLIES
 from conversation import (FIELD_LABELS, PET_FIELDS, DOG_SERVICES, DECLINE, CANCEL, BOOK,
                           lexical_topics, requests_price, validate_patch, explicit_patch,
                           reconcile_service, render_facts, explicit_conflicts, wants_booking)
@@ -107,9 +108,56 @@ def summary(application, salon):
 
 
 class Assistant:
-    def __init__(self, extractor, store, salon=None, notifier=None):
+    def __init__(self, extractor, store, salon=None, notifier=None, responder=None):
         self.extractor, self.store, self.salon = extractor, store, salon or SALON
         self.notifier = notifier
+        self.responder = responder
+
+    def _answer(self, message, reply, history, state):
+        # Never rewrite a review, validation error, or persistence acknowledgement.
+        if self.responder is None or state.last_error or state.issues or 'Проверьте заявку:' in reply:
+            return self._reply(message, reply, history, state)
+        next_field = (state.awaiting_field if state.active and
+                      QUESTIONS.get(state.awaiting_field, '\0') in reply else None)
+        missing = []
+        if state.active:
+            if not state.draft.service and not state.draft.request_text:
+                missing.append('request_text')
+            if not state.draft.phone:
+                missing.append('phone')
+        # Only facts already selected for this reply; no unrelated prices to guess from.
+        facts = {'name': self.salon['name'], 'services': {
+            key: value for key, value in self.salon['services'].items()
+            if value['name'] in reply and value['price'] in reply}}
+        for key in ('address', 'hours', 'phone', 'telegram', 'payment', 'cancellation', 'included', 'preparation'):
+            if self.salon[key] in reply:
+                facts[key] = self.salon[key]
+        if any(name in reply for name in self.salon['groomers']):
+            facts['groomers'] = self.salon['groomers']
+        data = {
+            'имя_ассистента': 'Лапка',
+            'справочник_салона': facts,
+            'ответ_приложения': reply,
+            'сообщение_клиента': message,
+            'заявка': {
+                'статус': ('saved' if state.saved else 'awaiting_confirmation' if state.pending else
+                           'collecting' if state.active else 'consultation'),
+                'недостающие_поля': missing,
+                'питомец_и_пожелания': state.draft.model_dump(exclude={'owner_name', 'phone'}),
+                'время_подтверждено': False,
+            },
+            'следующее_поле': next_field,
+            'следующий_вопрос': QUESTIONS.get(next_field),
+        }
+        try:
+            candidate = self.responder.compose(message, history, data)
+            if safe_text(candidate, data):
+                reply = candidate
+            else:
+                logging.getLogger(__name__).warning('lapka_response_fallback reason=validation')
+        except Exception as exc:
+            logging.getLogger(__name__).warning('lapka_response_fallback error_type=%s', type(exc).__name__)
+        return self._reply(message, reply, history, state)
 
     def _invalidate(self, state):
         state.pending, state.revision = None, None
@@ -122,7 +170,8 @@ class Assistant:
             return next(iter(state.issues.values()))
         if not state.draft.service and not state.draft.request_text:
             state.awaiting_field = 'request_text'
-            return QUESTIONS['request_text']
+            prefix = 'Указанное время — пожелание, его подтвердит администратор. ' if state.draft.preferred_date or state.draft.preferred_time or state.draft.schedule_note else ''
+            return prefix + QUESTIONS['request_text']
         if not state.draft.phone:
             state.awaiting_field = 'phone'
             return QUESTIONS['phone']
@@ -214,6 +263,10 @@ class Assistant:
             return self._reply(message, 'Сейчас не удаётся получить ответ ассистента. Ваш ввод и черновик сохранены в этом диалоге. Повторите сообщение или свяжитесь с салоном: ' + self.salon['phone'] + '.', history, state)
         intent = route_intent(message, extracted)
         extracted.intent = intent
+        boundary = ('instruction_override' if INSTRUCTION_OVERRIDE.search(message) else
+                    'off_topic' if OFF_TOPIC.search(message) else extracted.boundary)
+        if boundary in BOUNDARY_REPLIES:
+            return self._reply(message, BOUNDARY_REPLIES[boundary], history, state)
         declined = bool(DECLINE.search(message) or extracted.action == 'decline')
         if extracted.action == 'cancel':
             state.active, state.pending, state.revision = False, None, None
@@ -255,6 +308,8 @@ class Assistant:
         patch = {k:v for k,v in extracted.patch.model_dump().items() if v not in (None, '')}
         size_words = [('мелкий', r'мелк|маленьк|небольш'), ('средний', r'средн'), ('крупный', r'крупн|большая собака|большой пёс')]
         explicit_size = next((size for size,pattern in size_words if re.search(pattern, message, re.I)), None)
+        if '?' in message and re.search(r'это\s+(?:мелк|средн|крупн)|относится|считается|(?:мелк|средн|крупн)\w*\s+или', message, re.I):
+            explicit_size = None
         if explicit_size:
             patch['pet_size'] = explicit_size
         else:
@@ -334,7 +389,7 @@ class Assistant:
             # Refresh current version without appending an irrelevant phone question.
             if state.active and state.draft.phone and (state.draft.service or state.draft.request_text):
                 self._prepare(state)
-            return self._reply(message, reply, history, state)
+            return self._answer(message, reply, history, state)
         if state.active:
             if explicit_booking and (requests_price(message) or lexical_topics(message)):
                 note_explained()
@@ -348,7 +403,7 @@ class Assistant:
         else:
             note_explained()
             reply = render_facts(extracted, self.salon, state.draft)
-        return self._reply(message, reply, history, state)
+        return self._answer(message, reply, history, state)
 
     @staticmethod
     def _reply(message, reply, history, state):
