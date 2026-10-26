@@ -7,22 +7,24 @@ footer{display:none!important}
 .gradio-container>.main{padding:0!important}
 .gradio-container .main,.gradio-container .wrap,.gradio-container .column{min-width:0!important;max-width:100%!important}
 .html-container{padding:0!important}
-.salon-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;border-bottom:1px solid #e7e6de}
+.salon-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #e7e6de}
 .salon-brand{display:flex;align-items:center;gap:12px;min-width:0}
-.brand-paw{width:40px;height:40px;flex:none;fill:#354130}
-.salon-nav strong{display:block;font-size:22px;line-height:1.2;color:#354130}
+.brand-paw{width:32px;height:32px;flex:none;fill:#354130}
+.salon-nav strong{display:block;font-size:20px;line-height:1.2;color:#354130}
 .salon-nav .salon-brand span{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:5px;color:#59634f}
-.salon-nav a{flex:none;font-size:13px;font-weight:600;white-space:nowrap;color:#354130;text-decoration:none}
+.salon-nav a{flex:none;font-size:13px;font-weight:600;white-space:nowrap;color:#354130;text-decoration:none;text-align:right;line-height:1.4}
+.salon-nav a>span,.salon-nav a>small{display:block}
+.salon-nav a>small{font-size:12px;font-weight:400;color:#59634f}
 .salon-nav a:hover{text-decoration:underline}
-.salon-hero{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:28px 0;border-bottom:1px solid #e7e6de}
-.hero-title{margin:0;font-size:36px;font-weight:700;line-height:1.15;letter-spacing:-.7px}
+.salon-hero{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid #e7e6de}
+.hero-title{margin:0;min-width:0;font-size:23px;font-weight:700;line-height:1.2;letter-spacing:-.3px}
 .hero-title span{display:block;color:#849d55}
 .hero-title span+span{color:#c979a6}
-.salon-hero img{width:144px;height:144px;flex:none;object-fit:cover;border-radius:28% 24% 30% 22%}
+.salon-hero img{width:72px;height:72px;flex:none;object-fit:cover;border-radius:28% 24% 30% 22%}
 .educational-notice{padding:12px 0 4px;border-top:1px solid #e7e6de;color:#59634f}
 .educational-notice strong{font-size:14px;line-height:1.4}
 .educational-notice p{margin:3px 0 0;font-size:13px;line-height:1.45}
-.intro h1{font-size:25px!important;line-height:1.25!important;margin:8px 0 6px!important;letter-spacing:0}
+.intro h1{font-size:24px!important;line-height:1.25!important;margin:4px 0!important;letter-spacing:0}
 .intro-flower{color:#c979a6}
 .intro p{font-size:15px;line-height:1.5;margin:0;color:#59634f}
 button{min-height:44px!important;font-size:14px!important;line-height:1.4!important;border-radius:var(--radius)!important;box-shadow:none!important}
@@ -57,28 +59,37 @@ button{min-height:44px!important;font-size:14px!important;line-height:1.4!import
 .review-fields dd{font-size:16px;font-weight:600;line-height:1.45;color:#354130;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
 .review-note{font-size:13px;line-height:1.45;color:#59634f;padding-top:10px;border-top:1px solid #e7e6de;margin:0 0 5px}
 .review-hint{font-size:13px;line-height:1.45;color:#59634f;margin:0 0 8px}
-#reset-chat{background:transparent!important;color:#6b4f5f!important;border:1px solid var(--line)!important;align-self:flex-start}
+#reset-chat{background:transparent!important;color:#687060!important;border:0!important;align-self:flex-start;font-weight:400!important}
 #reset-confirm{padding:12px!important;border:1px solid var(--line)!important;background:#fff!important;border-radius:var(--radius)!important}
-#privacy{background:#fff!important;border:1px solid var(--line)!important;border-radius:var(--radius)!important;overflow-x:clip!important}
-#privacy .prose{font-size:14px!important;line-height:1.5!important}
-#composer button,#review-panel button.primary{background:#b52c70!important;color:#fff!important;border:1px solid #b52c70!important}
-#composer button:hover,#review-panel button.primary:hover{background:#96205b!important}
+#privacy{background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;overflow:visible!important}
+.data-disclosure{border-top:1px solid var(--line)}
+.data-disclosure summary{display:flex;align-items:center;gap:12px;width:fit-content;min-height:44px;padding:8px 0;list-style:none;cursor:pointer;color:#42592a;font-size:14px;font-weight:600}
+.data-disclosure summary::-webkit-details-marker{display:none}
+.disclosure-chevron{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.data-disclosure[open] .disclosure-chevron{transform:rotate(180deg)}
+.data-content{font-size:14px;line-height:1.5;color:#59634f;padding-bottom:8px}
+.data-content p{margin:0 0 12px}
+#context-actions #start-application,#review-panel button.primary{background:#b52c70!important;color:#fff!important;border:1px solid #b52c70!important}
+#context-actions #start-application:hover,#review-panel button.primary:hover{background:#96205b!important}
+#composer button{background:#f5f8ee!important;color:#42592a!important;border:1px solid var(--line)!important}
+#composer button:hover{background:#e9efdf!important}
 #review-panel button.secondary{background:#f5f8ee!important;color:#42592a!important;border:1px solid var(--line)!important}
 #salon-chat .progress-text{font-size:14px!important;color:#354130!important}
-button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid #52752d!important;outline-offset:3px!important}
+button:focus-visible,a:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #52752d!important;outline-offset:3px!important}
 .new-messages-button{min-width:44px;min-height:44px}
 button:disabled{opacity:.55;cursor:wait}
 @media(max-width:650px){
   .gradio-container .gap{gap:8px}
-  .salon-nav{padding:14px 0;gap:10px}
+  .salon-nav{padding:9px 0;gap:10px}
   .salon-brand{gap:8px}
   .brand-paw{width:30px;height:30px}
   .salon-nav strong{font-size:16px}
   .salon-nav .salon-brand span{font-size:8px;letter-spacing:1.2px;margin-top:4px}
   .salon-nav a{font-size:11px}
-  .salon-hero{padding:24px 0;gap:12px}
-  .hero-title{font-size:22px;letter-spacing:-.3px}
-  .salon-hero img{width:88px;height:88px}
+  .salon-nav a>small{font-size:10px}
+  .salon-hero{padding:12px 0;gap:12px}
+  .hero-title{font-size:18px;letter-spacing:0}
+  .salon-hero img{width:64px;height:64px}
   .educational-notice{padding:12px 0 4px}
   .educational-notice strong{font-size:13px}
   .educational-notice p{font-size:12px;line-height:1.4}
@@ -94,5 +105,5 @@ button:disabled{opacity:.55;cursor:wait}
   #review-panel{padding:12px!important}
   .review-fields{gap:12px 16px}
 }
-@media(max-width:360px){.review-fields{grid-template-columns:minmax(0,1fr)}.salon-nav strong{font-size:14px}.salon-nav .salon-brand span{font-size:7px;letter-spacing:.8px}.brand-paw{width:26px;height:26px}.hero-title{font-size:20px}.salon-hero img{width:66px;height:66px}}
+@media(max-width:360px){.review-fields{grid-template-columns:minmax(0,1fr)}.salon-nav strong{font-size:14px}.salon-nav .salon-brand span{font-size:7px;letter-spacing:.8px}.brand-paw{width:26px;height:26px}.hero-title{font-size:17px}.salon-hero img{width:50px;height:50px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}

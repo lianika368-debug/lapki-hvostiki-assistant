@@ -1,4 +1,5 @@
 """Gradio chat with a separate, current review and session-only private data."""
+import html
 import os
 from pathlib import Path
 from functools import partial
@@ -120,9 +121,9 @@ I18N = gr.I18n(**{lang: {'common.complete':'Готово','common.loading':'Об
     'chatbot.clear':'Начать заново','chatbot.copy_message':'Скопировать сообщение'} for lang in ('ru','en')})
 
 with gr.Blocks(title='Лапки & Хвостики — AI-ассистент', analytics_enabled=False) as demo:
-    gr.HTML('<header class="salon-nav"><div class="salon-brand"><svg class="brand-paw" viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="9" cy="15" rx="4.5" ry="6" transform="rotate(-25 9 15)"/><ellipse cx="18" cy="9" rx="4.5" ry="6" transform="rotate(-8 18 9)"/><ellipse cx="28" cy="11" rx="4.5" ry="6" transform="rotate(20 28 11)"/><ellipse cx="34" cy="20" rx="4" ry="5.5" transform="rotate(35 34 20)"/><path d="M11 29c0-5 5-13 10-13s12 8 12 13c0 7-7 4-11 4s-11 3-11-4Z"/></svg><div><strong>Лапки &amp; Хвостики</strong><span>Груминг · Екатеринбург</span></div></div><a href="https://t.me/lapki_hvostiki_ekb" target="_blank" rel="noopener noreferrer">Telegram <span aria-hidden="true">↗</span></a></header>')
-    gr.HTML('<section class="salon-hero" aria-label="Помощь с выбором груминга"><p class="hero-title"><span>Узнайте стоимость ухода,</span><span>задайте вопрос и оставьте заявку на груминг за пару минут.</span></p><img src="/salon-assets/playful-corgi.webp" alt="Весёлый корги" width="144" height="144"></section>')
-    gr.HTML('<div class="intro"><h1>Задайте вопрос или запишите питомца <span class="intro-flower" aria-hidden="true">✳</span></h1><p>Поможем выбрать уход и подготовить заявку.</p></div>')
+    gr.HTML('<header class="salon-nav"><div class="salon-brand"><svg class="brand-paw" viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="9" cy="15" rx="4.5" ry="6" transform="rotate(-25 9 15)"/><ellipse cx="18" cy="9" rx="4.5" ry="6" transform="rotate(-8 18 9)"/><ellipse cx="28" cy="11" rx="4.5" ry="6" transform="rotate(20 28 11)"/><ellipse cx="34" cy="20" rx="4" ry="5.5" transform="rotate(35 34 20)"/><path d="M11 29c0-5 5-13 10-13s12 8 12 13c0 7-7 4-11 4s-11 3-11-4Z"/></svg><div><strong>Лапки &amp; Хвостики</strong><span>Груминг · Екатеринбург</span></div></div><a href="https://t.me/lapki_hvostiki_ekb" target="_blank" rel="noopener noreferrer" aria-label="Написать салону в Telegram, откроется в новой вкладке"><span>Написать салону</span><small>в Telegram <span aria-hidden="true">↗</span></small></a></header>')
+    gr.HTML('<section class="salon-hero" aria-label="Забота о питомцах"><p class="hero-title"><span>Чистые лапки.</span><span>Счастливые хвостики.</span></p><img src="/salon-assets/playful-corgi.webp" alt="Весёлый корги" width="144" height="144"></section>')
+    gr.HTML('<div class="intro"><h1>Задайте вопрос или подготовьте заявку <span class="intro-flower" aria-hidden="true">✳</span></h1></div>')
     history = gr.State(value=lambda: list(WELCOME), time_to_live=3600)
     booking = gr.State(value=lambda: BookingState(), time_to_live=3600)
     revision = gr.Textbox(visible=False, value='')
@@ -140,11 +141,11 @@ with gr.Blocks(title='Лапки & Хвостики — AI-ассистент', 
                                  placeholder='Напишите…', lines=1, max_lines=5,
                                  max_length=4000, scale=5, min_width=120,
                                  html_attributes={'enterkeyhint':'send'})
-            submit = gr.Button('Отправить', variant='primary', scale=1, min_width=100)
+            submit = gr.Button('Отправить', variant='secondary', scale=1, min_width=100)
         gr.HTML('<p class="input-hint">Enter — отправить · Shift+Enter — новая строка</p>')
-    status = gr.HTML('<p role="status" aria-live="polite">Можно задать любой вопрос об уходе.</p>', elem_id='conversation-status')
+    status = gr.HTML('<p role="status" aria-live="polite">Вопросы об услугах, ценах и подготовке к визиту.</p>', elem_id='conversation-status')
     with gr.Row(elem_id='context-actions'):
-        book = gr.Button('Подготовить заявку', size='sm')
+        book = gr.Button('Подготовить заявку', variant='primary', size='sm', elem_id='start-application')
         keep = gr.Button('Оставить как было', visible=False, size='sm')
         select_service = gr.Button('Выбрать экспресс-линьку', visible=False, size='sm')
     with gr.Column(visible=False, elem_id='review-panel') as review_panel:
@@ -160,14 +161,17 @@ with gr.Blocks(title='Лапки & Хвостики — AI-ассистент', 
         with gr.Row():
             reset_yes = gr.Button('Да, очистить')
             reset_no = gr.Button('Продолжить разговор')
-    with gr.Accordion('Контакты, срок жизни черновика и обработка данных', open=False, elem_id='privacy'):
-        gr.Markdown('**Учебный кейс.** Реальная запись в салон не оформляется. Используйте только вымышленные данные. Тестовые заявки после подтверждения действительно сохраняются в Supabase и отправляются в Telegram.')
-        gr.Markdown(f"{SALON['address']}\n\n{SALON['hours']}\n\nТелефон: {SALON['phone']}. Telegram: {SALON['telegram']}.\n\n"
-            'Черновик и переписка хранятся только в текущей сессии до 1 часа. При обновлении страницы, закрытии или перезапуске сервиса они могут исчезнуть. '
-            'Отправка сама по себе при обновлении не повторяется.\n\n'
-            'Сообщения обрабатывает Google Gemini. После явного подтверждения заявка сохраняется в Supabase и отправляется администратору в Telegram. '
+    gr.HTML('<details class="data-disclosure"><summary><span>🔒 Данные и контакты</span>'
+            '<svg class="disclosure-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>'
+            '<div class="data-content"><p><strong>Учебный кейс.</strong> Реальная запись в салон не оформляется. Используйте только вымышленные данные. '
+            'Тестовые заявки после подтверждения действительно сохраняются в Supabase и отправляются в Telegram.</p>'
+            f'<p>{html.escape(SALON["address"])}</p><p>{html.escape(SALON["hours"])}</p>'
+            f'<p>Телефон: {html.escape(SALON["phone"])}. Telegram салона: {html.escape(SALON["telegram"])}.</p>'
+            '<p>Черновик и переписка хранятся только в текущей сессии до 1 часа. При обновлении страницы, закрытии или перезапуске сервиса они могут исчезнуть. '
+            'Отправка сама по себе при обновлении не повторяется.</p>'
+            '<p>Сообщения обрабатывает Google Gemini. После явного подтверждения заявка сохраняется в Supabase и отправляется администратору в Telegram. '
             'Не указывайте лишних персональных данных. Очистка чата не удаляет уже отправленную заявку. '
-            'Неизвестные длительность, категорию размера и возможность записи уточняет администратор.')
+            'Неизвестные длительность, категорию размера и возможность записи уточняет администратор.</p></div></details>', elem_id='privacy')
     gr.HTML('<aside class="educational-notice" aria-label="Об учебном кейсе"><strong>Учебный кейс · AI-ассистент</strong><p>Пример работы AI-ассистента для груминг-салона. Заявки тестовые, реальная запись не оформляется. Пожалуйста, используйте вымышленные данные.</p></aside>')
     outputs = [message, chat, history, booking, review_panel, keep, select_service, review, revision, status, starters, reset_panel]
     common = dict(outputs=outputs, concurrency_id='chat', concurrency_limit=1, api_name=False,
