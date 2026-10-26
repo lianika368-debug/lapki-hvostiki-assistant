@@ -81,11 +81,15 @@ def test_message_input_clears_before_work_and_status_distinguishes_draft(monkeyp
     pending = next(stream)
     assert pending[0]['value'] == '' and pending[0]['interactive'] is False
     assert 'готовит ответ' in pending[9]
-    assert pending[1][-1] == {'role':'user', 'content':'Хочу оставить заявку на когти'}
+    assert pending[1][-2] == {'role':'user', 'content':'Хочу оставить заявку на когти'}
+    assert pending[1][-1] == {'role':'assistant', 'content':app.TYPING_MESSAGE}
+    assert 'data-thinking="true"' in pending[9]
     extractor.extract.assert_not_called()
     completed = next(stream)
     assert completed[0]['value'] == '' and completed[0]['interactive'] is True
     assert 'ещё не отправлен' in completed[9]
+    assert not any(item['content'] == app.TYPING_MESSAGE for item in completed[1] + completed[2])
+    assert 'data-thinking' not in completed[9]
     store.save.assert_not_called(); notifier.send.assert_not_called()
 
 
@@ -101,6 +105,8 @@ def test_message_input_is_restored_on_api_failure(monkeypatch):
     assert frames[-1][0]['value'] == 'Что входит в комплекс?'
     assert frames[-1][0]['interactive'] is True and state.draft.pet_name == 'Плюш'
     assert 'не отправлена' in frames[-1][9]
+    assert not any(item['content'] == app.TYPING_MESSAGE for item in frames[-1][1] + frames[-1][2])
+    assert 'data-thinking' not in frames[-1][9]
     store.save.assert_not_called(); notifier.send.assert_not_called()
 
 
@@ -124,3 +130,15 @@ def test_ready_and_saved_status_cannot_be_confused_with_sent_message():
     state.saved = True
     assert 'сохранена' in result([], state)[9]
     assert 'не подтверждённая запись' in result([], state)[9]
+
+
+
+def test_typing_indicator_also_disappears_on_unexpected_callback_error(monkeypatch):
+    import app
+    monkeypatch.setattr(app, '_send', Mock(side_effect=RuntimeError('fake')))
+    frames = list(app.send_message('Вопрос', [], BookingState()))
+    assert frames[0][1][-1]['content'] == app.TYPING_MESSAGE
+    assert frames[-1][0]['value'] == 'Вопрос'
+    assert frames[-1][0]['interactive'] is True
+    assert not any(item['content'] == app.TYPING_MESSAGE for item in frames[-1][1] + frames[-1][2])
+    assert 'data-thinking' not in frames[-1][9]
