@@ -1,0 +1,38 @@
+[
+  {
+    "message": "привет",
+    "total_seconds": 0.0,
+    "gemini_calls": 0,
+    "answer": "Здравствуйте! Я Лапка. Помогу с услугами, ценами и подготовкой к визиту. Что нужно вашему питомцу?",
+    "error": false,
+    "http_attempts": 0,
+    "api_failure": null
+  },
+  {
+    "message": "спасибо",
+    "total_seconds": 0.0,
+    "gemini_calls": 0,
+    "answer": "Пожалуйста! Если появятся вопросы об услугах салона, я помогу.",
+    "error": false,
+    "http_attempts": 0,
+    "api_failure": null
+  },
+  {
+    "message": "ты так долго отвечаешь",
+    "total_seconds": 0.0,
+    "gemini_calls": 0,
+    "answer": "Понимаю, ожидание неудобно. Я здесь и помогу с вопросами об услугах салона.",
+    "error": false,
+    "http_attempts": 0,
+    "api_failure": null
+  },
+  {
+    "message": "Сколько стоит комплекс для кошки и сколько длится?",
+    "total_seconds": 3.6194,
+    "gemini_calls": 1,
+    "answer": "Комплексный груминг для кошек: от 2 500 ₽.\n\nДлительность процедур в данных салона не указана. Её уточнит администратор с учётом питомца и услуги.",
+    "error": false,
+    "http_attempts": 1,
+    "api_failure": null
+  }
+]

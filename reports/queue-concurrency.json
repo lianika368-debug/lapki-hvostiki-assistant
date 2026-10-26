@@ -1,0 +1,6 @@
+{
+  "environment": "local Gradio; extractor delay 4000 ms; storage and Telegram mocked",
+  "same_session_action_blocked": true,
+  "other_session_response_ms": 309,
+  "slow_session_completed": true
+}
