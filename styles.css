@@ -105,3 +105,10 @@ button:disabled{opacity:.55;cursor:wait}
 }
 @media(max-width:360px){.review-fields{grid-template-columns:minmax(0,1fr)}.salon-nav strong{font-size:14px;padding-right:88px}.salon-location{font-size:7px;letter-spacing:.8px}.brand-paw{width:26px;height:26px}.hero-title{font-size:17px}.salon-hero img{width:50px;height:50px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+/* This temporary chat message is display-only; it never enters Gemini's history. */
+#salon-chat [data-testid="bot"][aria-label="bot's message: Лапка готовит ответ"] .message-content{display:inline-flex;align-items:center;gap:10px}
+#salon-chat [data-testid="bot"][aria-label="bot's message: Лапка готовит ответ"] .md{font-size:13px!important;color:#687060!important}
+#salon-chat [data-testid="bot"][aria-label="bot's message: Лапка готовит ответ"] .message-content::after{content:"";display:inline-block;flex:none;width:34px;height:20px;background-image:radial-gradient(circle closest-side,#849d55 90%,transparent),radial-gradient(circle closest-side,#c979a6 90%,transparent),radial-gradient(circle closest-side,#849d55 90%,transparent);background-size:7px 7px;background-repeat:no-repeat;background-position:0 8px,13px 8px,26px 8px;animation:lapka-typing 1.4s ease-in-out infinite}
+@keyframes lapka-typing{0%,60%,100%{background-position:0 8px,13px 8px,26px 8px}15%{background-position:0 2px,13px 8px,26px 8px}30%{background-position:0 8px,13px 2px,26px 8px}45%{background-position:0 8px,13px 8px,26px 2px}}
+@media(prefers-reduced-motion:reduce){#salon-chat .message-content::after{animation:none!important}}
