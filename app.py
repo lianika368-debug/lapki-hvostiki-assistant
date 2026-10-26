@@ -23,6 +23,7 @@ from notifications import TelegramNotifier
 ROOT = Path(__file__).parent
 assistant = Assistant(GeminiExtractor(), SupabaseStore(), notifier=TelegramNotifier(), responder=LapkaResponder())
 WELCOME = [{'role':'assistant','content':'Здравствуйте! Я Лапка, ассистент салона «Лапки & Хвостики». Помогу выбрать уход, узнать стоимость и подготовить заявку. Что нужно вашему питомцу?'}]
+TYPING_MESSAGE = 'Лапка готовит ответ'
 QUICK_QUESTIONS = {
     'prices': ('Какие у вас услуги и цены?', ['services']),
     'included': ('Что входит в комплексный груминг?', ['included']),
@@ -63,7 +64,7 @@ def _send(message, history, booking, revision=None):
 
 
 def preset(message, history, booking, revision=None, request: gr.Request = None):
-    return send(message, history, booking, revision, request=request)
+    yield from send_message(message, history, booking, revision, request=request)
 
 
 def _quick_answer(topic, history, booking):
@@ -129,8 +130,8 @@ def send_message(message, history, booking, revision=None, request: gr.Request =
             return
         processing = [gr.skip() for _ in outputs]
         processing[0] = gr.update(value='', interactive=False)
-        processing[1] = result(history or list(WELCOME), booking or BookingState())[1] + [{'role':'user', 'content':message}]
-        processing[9] = '<p role="status" aria-live="polite">Сообщение отправлено. Лапка готовит ответ…</p>'
+        processing[1] = result(history or list(WELCOME), booking or BookingState())[1] + [{'role':'user', 'content':message}, {'role':'assistant', 'content':TYPING_MESSAGE}]
+        processing[9] = '<p role="status" aria-live="polite" data-thinking="true">Сообщение отправлено. Лапка готовит ответ…</p>'
         yield tuple(processing)
         try:
             completed = list(_send(message, history, booking, revision))
@@ -139,6 +140,9 @@ def send_message(message, history, booking, revision=None, request: gr.Request =
             logging.getLogger(__name__).warning('chat_ui_failed error_type=%s', type(exc).__name__)
             completed = [gr.skip() for _ in outputs]
             completed[0] = message
+            completed[1] = [*(history or list(WELCOME)), {'role':'user', 'content':message},
+                            {'role':'assistant', 'content':'Не удалось завершить обработку. Повторите сообщение, пожалуйста.'}]
+            completed[2] = completed[1]
             completed[9] = '<p role="status" aria-live="polite">Не удалось завершить обработку. Ввод восстановлен: повторите сообщение.</p>'
         completed[0] = gr.update(value=completed[0], interactive=True)
         yield tuple(completed)
