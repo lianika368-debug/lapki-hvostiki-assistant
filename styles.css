@@ -9,9 +9,12 @@ footer{display:none!important}
 .html-container{padding:0!important}
 .salon-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #e7e6de}
 .salon-brand{display:flex;align-items:center;gap:12px;min-width:0}
+.salon-brand>div{min-width:0;flex:1}
 .brand-paw{width:32px;height:32px;flex:none;fill:#354130}
 .salon-nav strong{display:block;font-size:20px;line-height:1.2;color:#354130}
-.salon-nav .salon-brand span{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:5px;color:#59634f}
+.brand-meta{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin-top:5px}
+.salon-location{font-size:10px;letter-spacing:2px;text-transform:uppercase;white-space:nowrap;color:#59634f}
+.demo-badge{display:inline-block;padding:2px 6px;border:1px solid #e3cbd8;border-radius:6px;background:#fff5f8;color:#76405c;font-size:10px;line-height:1.3;letter-spacing:0;text-transform:none;white-space:nowrap}
 .salon-nav a{flex:none;font-size:13px;font-weight:600;white-space:nowrap;color:#354130;text-decoration:none;text-align:right;line-height:1.4}
 .salon-nav a>span,.salon-nav a>small{display:block}
 .salon-nav a>small{font-size:12px;font-weight:400;color:#59634f}
@@ -21,12 +24,8 @@ footer{display:none!important}
 .hero-title span{display:block;color:#849d55}
 .hero-title span+span{color:#c979a6}
 .salon-hero img{width:72px;height:72px;flex:none;object-fit:cover;border-radius:28% 24% 30% 22%}
-.educational-notice{padding:12px 0 4px;border-top:1px solid #e7e6de;color:#59634f}
-.educational-notice strong{font-size:14px;line-height:1.4}
-.educational-notice p{margin:3px 0 0;font-size:13px;line-height:1.45}
 .intro h1{font-size:24px!important;line-height:1.25!important;margin:4px 0!important;letter-spacing:0}
-.intro-flower{color:#c979a6}
-.intro p{font-size:15px;line-height:1.5;margin:0;color:#59634f}
+.intro .demo-caption{font-size:13px;line-height:1.4;margin:6px 0 0;color:#6b4f5f}
 button{min-height:44px!important;font-size:14px!important;line-height:1.4!important;border-radius:var(--radius)!important;box-shadow:none!important}
 #quick-questions{gap:8px!important;min-width:0!important;width:100%!important;max-width:100%!important}
 #quick-questions button,#context-actions button{background:#f5f8ee!important;color:#42592a!important;border:1px solid var(--line)!important}
@@ -40,6 +39,7 @@ button{min-height:44px!important;font-size:14px!important;line-height:1.4!import
 #salon-chat button{min-width:44px!important;min-height:44px!important}
 #salon-chat button[aria-label="Clear chat"],#salon-chat button[aria-label="Очистить чат"],#salon-chat button[aria-label="Начать заново"]{display:none!important}
 #conversation-status p{font-size:13px;line-height:1.4;margin:0;color:#59634f}
+#conversation-status:has(p:empty){display:none!important}
 #message-card{background:#fff!important;padding:10px!important;gap:6px!important;position:sticky;bottom:var(--keyboard-offset,0px);z-index:5}
 #message-card .styler,#composer .form,#composer .block,#composer .input-container{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important}
 #composer{gap:8px!important;align-items:stretch!important;flex-wrap:nowrap!important}
@@ -80,23 +80,21 @@ button:focus-visible,a:focus-visible,textarea:focus-visible,summary:focus-visibl
 button:disabled{opacity:.55;cursor:wait}
 @media(max-width:650px){
   .gradio-container .gap{gap:8px}
-  .salon-nav{padding:9px 0;gap:10px}
-  .salon-brand{gap:8px}
-  .brand-paw{width:30px;height:30px}
-  .salon-nav strong{font-size:16px}
-  .salon-nav .salon-brand span{font-size:8px;letter-spacing:1.2px;margin-top:4px}
-  .salon-nav a{font-size:11px}
+  .salon-nav{position:relative;padding:9px 0;gap:10px}
+  .salon-brand{gap:8px;width:100%}
+  .brand-paw{width:30px;height:30px;align-self:flex-start;margin-top:2px}
+  .salon-nav strong{font-size:16px;padding-right:92px}
+  .brand-meta{gap:4px 6px;margin-top:4px}
+  .salon-location{font-size:8px;letter-spacing:1.2px}
+  .demo-badge{font-size:9px;padding:2px 5px}
+  .salon-nav a{position:absolute;top:9px;right:0;font-size:11px}
   .salon-nav a>small{font-size:10px}
   .salon-hero{padding:12px 0;gap:12px}
   .hero-title{font-size:18px;letter-spacing:0}
   .salon-hero img{width:64px;height:64px}
-  .educational-notice{padding:12px 0 4px}
-  .educational-notice strong{font-size:13px}
-  .educational-notice p{font-size:12px;line-height:1.4}
   .intro h1{font-size:20px!important;line-height:1.2!important;margin:6px 0!important}
-  .intro p{display:none}
-  #quick-questions{flex-wrap:nowrap!important;overflow-x:auto;padding:2px 0 4px}
-  #quick-questions button{flex:0 0 auto!important;min-width:max-content!important;padding:8px 12px!important}
+  #quick-questions{flex-wrap:nowrap!important;overflow:visible;gap:6px!important;padding:2px 0 4px}
+  #quick-questions button{flex:1 1 0!important;min-width:0!important;padding:8px 6px!important;font-size:13px!important;white-space:nowrap}
   #salon-chat{height:160px!important;min-height:150px!important}
   #salon-chat:has(.message.user){height:clamp(220px,36svh,340px)!important}
   #context-actions{gap:6px!important}
@@ -105,5 +103,5 @@ button:disabled{opacity:.55;cursor:wait}
   #review-panel{padding:12px!important}
   .review-fields{gap:12px 16px}
 }
-@media(max-width:360px){.review-fields{grid-template-columns:minmax(0,1fr)}.salon-nav strong{font-size:14px}.salon-nav .salon-brand span{font-size:7px;letter-spacing:.8px}.brand-paw{width:26px;height:26px}.hero-title{font-size:17px}.salon-hero img{width:50px;height:50px}}
+@media(max-width:360px){.review-fields{grid-template-columns:minmax(0,1fr)}.salon-nav strong{font-size:14px;padding-right:88px}.salon-location{font-size:7px;letter-spacing:.8px}.brand-paw{width:26px;height:26px}.hero-title{font-size:17px}.salon-hero img{width:50px;height:50px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
