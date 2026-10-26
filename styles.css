@@ -25,7 +25,7 @@ footer{display:none!important}
 .hero-title span+span{color:#c979a6}
 .salon-hero img{width:72px;height:72px;flex:none;object-fit:cover;border-radius:28% 24% 30% 22%}
 .intro h1{font-size:24px!important;line-height:1.25!important;margin:4px 0!important;letter-spacing:0}
-.intro .demo-caption{font-size:13px;line-height:1.4;margin:6px 0 0;color:#6b4f5f}
+.demo-caption{font-size:13px;line-height:1.4;margin:0;color:#6b4f5f}
 button{min-height:44px!important;font-size:14px!important;line-height:1.4!important;border-radius:var(--radius)!important;box-shadow:none!important}
 #quick-questions{gap:8px!important;min-width:0!important;width:100%!important;max-width:100%!important}
 #quick-questions button,#context-actions button{background:#f5f8ee!important;color:#42592a!important;border:1px solid var(--line)!important}
