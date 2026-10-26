@@ -16,7 +16,7 @@ footer{display:none!important}
 .salon-nav a>span,.salon-nav a>small{display:block}
 .salon-nav a>small{font-size:12px;font-weight:400;color:#59634f}
 .salon-nav a:hover{text-decoration:underline}
-.salon-hero{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid #e7e6de}
+.salon-hero{display:flex;align-items:center;justify-content:flex-start;gap:20px;padding:12px 0;border-bottom:1px solid #e7e6de}
 .hero-title{margin:0;min-width:0;font-size:23px;font-weight:700;line-height:1.2;letter-spacing:-.3px}
 .hero-title span{display:block;color:#849d55}
 .hero-title span+span{color:#c979a6}
