@@ -6,7 +6,7 @@ from unittest.mock import Mock
 import pytest
 
 from assistant import Assistant, BookingState, SALON
-from lapka import GeminiResponder, PROMPT_PATH
+from lapka import PROMPT_PATH
 from models import Draft, Extraction, TZ
 
 
@@ -156,19 +156,23 @@ def test_booking_time_stays_a_wish_and_only_one_field_is_asked():
 
 
 def test_sdk_receives_user_prompt_and_real_data_block(monkeypatch):
-    import lapka
+    import gemini_client
     monkeypatch.setenv('GEMINI_API_KEY', 'unit-test-key')
     fake_client = Mock()
     fake_client.__enter__ = Mock(return_value=fake_client)
     fake_client.__exit__ = Mock(return_value=False)
-    fake_client.models.generate_content.return_value.text = json.dumps({'text':'Помогу с уходом. Какую услугу рассматриваете?'})
+    fake_client.models.generate_content.return_value.text = json.dumps({'intent':'общее','reply':'Помогу с уходом. Какую услугу рассматриваете?'})
     constructor = Mock(return_value=fake_client)
-    monkeypatch.setattr(lapka.genai, 'Client', constructor)
-    data = {'справочник_салона': SALON, 'заявка': {'статус':'consultation'}, 'следующий_вопрос':None}
-    text = GeminiResponder().compose('Вопрос', [], data)
+    monkeypatch.setattr(gemini_client.genai, 'Client', constructor)
+    data = {'application_status':'consultation','missing_fields':[]}
+    extracted = gemini_client.GeminiExtractor().extract('Вопрос', [], Draft(), SALON, context=data)
     call = fake_client.models.generate_content.call_args.kwargs
     payload = json.loads(call['contents'])
-    assert payload['ДАННЫЕ'] == data and payload['СООБЩЕНИЕ_КЛИЕНТА'] == 'Вопрос'
+    assert payload['ДАННЫЕ']['application_status'] == 'consultation'
+    assert payload['ДАННЫЕ']['salon'] == SALON and payload['message'] == 'Вопрос'
     assert PROMPT_PATH.read_text() in call['config'].system_instruction
     assert call['config'].response_mime_type == 'application/json'
-    assert text.startswith('Помогу')
+    assert extracted.reply.startswith('Помогу')
+    assert constructor.call_args.kwargs['http_options'].retry_options.attempts == 1
+    assert constructor.call_args.kwargs['http_options'].timeout == 10000
+    fake_client.models.generate_content.assert_called_once()
