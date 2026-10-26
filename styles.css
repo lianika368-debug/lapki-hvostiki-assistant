@@ -71,7 +71,7 @@ button{min-height:44px!important;font-size:14px!important;line-height:1.4!import
 .data-content p{margin:0 0 12px}
 #context-actions #start-application,#review-panel button.primary{background:#b52c70!important;color:#fff!important;border:1px solid #b52c70!important}
 #context-actions #start-application:hover,#review-panel button.primary:hover{background:#96205b!important}
-#composer button{background:#f5f8ee!important;color:#42592a!important;border:1px solid var(--line)!important}
+#composer button{background:#f5f8ee!important;color:#42592a!important;border:1px solid #657b4e!important}
 #composer button:hover{background:#e9efdf!important}
 #review-panel button.secondary{background:#f5f8ee!important;color:#42592a!important;border:1px solid var(--line)!important}
 #salon-chat .progress-text{font-size:14px!important;color:#354130!important}
