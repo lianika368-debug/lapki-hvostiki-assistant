@@ -9,7 +9,7 @@ import time
 from datetime import datetime, date, time as clock_time
 from pydantic import ValidationError
 from models import Application, Draft, Extraction, TZ
-from lapka import safe_text, INSTRUCTION_OVERRIDE, OFF_TOPIC, BOUNDARY_REPLIES
+from lapka import safe_text, smalltalk, INSTRUCTION_OVERRIDE, OFF_TOPIC, BOUNDARY_REPLIES
 from conversation import (FIELD_LABELS, PET_FIELDS, DOG_SERVICES, DECLINE, CANCEL, BOOK,
                           lexical_topics, requests_price, validate_patch, explicit_patch,
                           reconcile_service, render_facts, explicit_conflicts, wants_booking)
@@ -113,7 +113,7 @@ class Assistant:
         self.notifier = notifier
         self.responder = responder
 
-    def _answer(self, message, reply, history, state):
+    def _answer(self, message, reply, history, state, proposed_reply=None):
         # Never rewrite a review, validation error, or persistence acknowledgement.
         if self.responder is None or state.last_error or state.issues or 'Проверьте заявку:' in reply:
             return self._reply(message, reply, history, state)
@@ -148,10 +148,13 @@ class Assistant:
             },
             'следующее_поле': next_field,
             'следующий_вопрос': QUESTIONS.get(next_field),
+            'предложенный_ответ': proposed_reply,
         }
         try:
             candidate = self.responder.compose(message, history, data)
-            if safe_text(candidate, data):
+            if candidate is None:
+                pass
+            elif safe_text(candidate, data):
                 reply = candidate
             else:
                 logging.getLogger(__name__).warning('lapka_response_fallback reason=validation')
@@ -248,13 +251,31 @@ class Assistant:
         if normalized in {'оставить прежнее значение', 'оставить как было'}:
             state.issues.clear()
             return self._reply(message, self._prepare(state) if state.active else 'Прежние значения сохранены.', history, state)
+        fast_reply = smalltalk(message)
+        if fast_reply:
+            return self._reply(message, fast_reply, history, state)
+        early_boundary = ('instruction_override' if INSTRUCTION_OVERRIDE.search(message) else
+                          'off_topic' if OFF_TOPIC.search(message) else None)
+        if early_boundary:
+            return self._reply(message, BOUNDARY_REPLIES[early_boundary], history, state)
         if time.monotonic() - state.last_request < 1:
             state.last_error = True
             return self._reply(message, 'Сообщение уже обрабатывалось. Подождите секунду и повторите при необходимости.', history, state)
         state.last_request = time.monotonic()
         try:
-            extracted = self.extractor.extract(message, history, state.draft, self.salon)
-        except Exception:
+            missing = []
+            if state.active:
+                if not state.draft.service and not state.draft.request_text:
+                    missing.append('request_text')
+                if not state.draft.phone:
+                    missing.append('phone')
+            context = {'application_status': ('saved' if state.saved else 'awaiting_confirmation' if state.pending else
+                                              'collecting' if state.active else 'consultation'),
+                       'missing_fields':missing, 'next_field':state.awaiting_field if state.active else None,
+                       'time_confirmed':False}
+            extracted = self.extractor.extract(message, history, state.draft, self.salon, context=context)
+        except Exception as exc:
+            logging.getLogger(__name__).warning('gemini_extract_failed error_type=%s', type(exc).__name__)
             state.last_error = True
             # An attempted edit must not leave an old summary sendable.
             if state.pending:
@@ -389,7 +410,7 @@ class Assistant:
             # Refresh current version without appending an irrelevant phone question.
             if state.active and state.draft.phone and (state.draft.service or state.draft.request_text):
                 self._prepare(state)
-            return self._answer(message, reply, history, state)
+            return self._answer(message, reply, history, state, proposed_reply=extracted.reply)
         if state.active:
             if explicit_booking and (requests_price(message) or lexical_topics(message)):
                 note_explained()
@@ -403,7 +424,7 @@ class Assistant:
         else:
             note_explained()
             reply = render_facts(extracted, self.salon, state.draft)
-        return self._answer(message, reply, history, state)
+        return self._answer(message, reply, history, state, proposed_reply=extracted.reply)
 
     @staticmethod
     def _reply(message, reply, history, state):

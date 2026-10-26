@@ -15,12 +15,13 @@ from ui_summary import render_summary
 from conversation import render_facts
 from models import Extraction
 from gemini_client import GeminiExtractor
-from lapka import GeminiResponder
+from lapka import LapkaResponder
+from ui_gate import run_session
 from storage import SupabaseStore
 from notifications import TelegramNotifier
 
 ROOT = Path(__file__).parent
-assistant = Assistant(GeminiExtractor(), SupabaseStore(), notifier=TelegramNotifier(), responder=GeminiResponder())
+assistant = Assistant(GeminiExtractor(), SupabaseStore(), notifier=TelegramNotifier(), responder=LapkaResponder())
 WELCOME = [{'role':'assistant','content':'Здравствуйте! Я Лапка, ассистент салона «Лапки & Хвостики». Помогу выбрать уход, узнать стоимость и подготовить заявку. Что нужно вашему питомцу?'}]
 QUICK_QUESTIONS = {
     'prices': ('Какие у вас услуги и цены?', ['services']),
@@ -55,16 +56,16 @@ def result(history, booking, input_value=''):
             gr.update(visible=not len(history) > 1), gr.update(visible=booking.reset_requested))
 
 
-def send(message, history, booking, revision=None):
+def _send(message, history, booking, revision=None):
     history, booking = assistant.respond(message or '', history or list(WELCOME), booking or BookingState(), revision=revision or None)
     return result(history, booking, message)
 
 
-def preset(message, history, booking, revision=None):
-    return send(message, history, booking, revision)
+def preset(message, history, booking, revision=None, request: gr.Request = None):
+    return send(message, history, booking, revision, request=request)
 
 
-def quick_answer(topic, history, booking):
+def _quick_answer(topic, history, booking):
     question, topics = QUICK_QUESTIONS[topic]
     booking = booking or BookingState()
     booking.last_error = False
@@ -79,22 +80,22 @@ def quick_answer(topic, history, booking):
     return result(history, booking)
 
 
-def clear():
+def _clear():
     return result(list(WELCOME), BookingState())
 
 
-def request_reset(history, booking):
+def _request_reset(history, booking):
     booking = booking or BookingState()
     booking.reset_requested = True
     return result(history or list(WELCOME), booking)
 
 
-def cancel_reset(history, booking):
+def _cancel_reset(history, booking):
     booking.reset_requested = False
     return result(history, booking)
 
 
-def choose_shedding(history, booking):
+def _choose_shedding(history, booking):
     if booking.saved:
         booking = BookingState()
     booking.draft.service = 'shedding'
@@ -104,6 +105,36 @@ def choose_shedding(history, booking):
     reply = assistant._prepare(booking) if booking.active else 'Выбрали экспресс-линьку: от 1 500 ₽. Что ещё хотите уточнить? Если готовы передать запрос администратору, нажмите «Подготовить заявку».'
     history, booking = assistant._reply('Выбираю экспресс-линьку', reply, history, booking)
     return result(history, booking)
+
+
+def _busy_result():
+    updates = [gr.skip() for _ in outputs]
+    updates[9] = '<p role="status" aria-live="polite">Предыдущее сообщение ещё обрабатывается. Дождитесь ответа.</p>'
+    return tuple(updates)
+
+
+def send(message, history, booking, revision=None, request: gr.Request = None):
+    return run_session(request, lambda: _send(message, history, booking, revision), _busy_result)
+
+
+def quick_answer(topic, history, booking, request: gr.Request = None):
+    return run_session(request, lambda: _quick_answer(topic, history, booking), _busy_result)
+
+
+def clear(request: gr.Request = None):
+    return run_session(request, _clear, _busy_result)
+
+
+def request_reset(history, booking, request: gr.Request = None):
+    return run_session(request, lambda: _request_reset(history, booking), _busy_result)
+
+
+def cancel_reset(history, booking, request: gr.Request = None):
+    return run_session(request, lambda: _cancel_reset(history, booking), _busy_result)
+
+
+def choose_shedding(history, booking, request: gr.Request = None):
+    return run_session(request, lambda: _choose_shedding(history, booking), _busy_result)
 
 
 THEME = gr.themes.Soft(primary_hue='pink', secondary_hue='lime', neutral_hue='stone',
@@ -175,7 +206,7 @@ with gr.Blocks(title='Лапки & Хвостики — AI-ассистент', 
             'Не указывайте лишних персональных данных. Очистка чата не удаляет уже отправленную заявку. '
             'Неизвестные длительность, категорию размера и возможность записи уточняет администратор.</p></div></details>', elem_id='privacy')
     outputs = [message, chat, history, booking, review_panel, keep, select_service, review, revision, status, starters, reset_panel]
-    common = dict(outputs=outputs, concurrency_id='chat', concurrency_limit=1, api_name=False,
+    common = dict(outputs=outputs, concurrency_id='chat', concurrency_limit=4, api_name=False,
                   trigger_mode='once', show_progress='minimal')
     submit.click(send, inputs=[message,history,booking,revision], **common)
     message.submit(send, inputs=[message,history,booking,revision], **common)

@@ -3,7 +3,7 @@ from datetime import date, datetime, time
 from typing import Literal
 from zoneinfo import ZoneInfo
 import re
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, field_validator, model_validator
 
 TZ = ZoneInfo('Asia/Yekaterinburg')
 ServiceId = Literal['shedding', 'hygiene', 'cat_full', 'dog_small', 'dog_medium', 'dog_large', 'nails', 'ears', 'teeth', 'mats', 'color']
@@ -46,6 +46,7 @@ class Conflict(BaseModel):
 
 
 class Extraction(BaseModel):
+    _api_attempts: int = PrivateAttr(default=0)
     model_config = ConfigDict(extra='forbid')
     intent: Literal['цена', 'запись', 'общее']
     action: Literal['consult', 'book', 'continue', 'edit', 'decline', 'cancel', 'new_pet'] = 'consult'
@@ -58,6 +59,7 @@ class Extraction(BaseModel):
     conflicts: list[Conflict] = Field(default_factory=list, max_length=6)
     multiple_pets: bool = False
     boundary: Literal['none', 'instruction_override', 'off_topic'] = 'none'
+    reply: str | None = Field(default=None, max_length=1800)
 
 
 class Application(Draft):

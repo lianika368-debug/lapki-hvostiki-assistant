@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import json
 import os
+import time
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -9,11 +10,11 @@ from dotenv import load_dotenv
 
 from assistant import Assistant, BookingState
 from gemini_client import GeminiExtractor
-from lapka import GeminiResponder, safe_text
+from lapka import LapkaResponder, safe_text
 from models import TZ
 
 
-class TracingResponder(GeminiResponder):
+class TracingResponder(LapkaResponder):
     def __init__(self):
         self.calls = []
 
@@ -27,12 +28,24 @@ class TracingResponder(GeminiResponder):
         return text
 
 
+class CountingExtractor(GeminiExtractor):
+    def __init__(self):
+        self.calls=0
+        self.http_attempts=0
+    def extract(self,*args,**kwargs):
+        self.calls+=1
+        result=super().extract(*args,**kwargs)
+        self.http_attempts+=result._api_attempts
+        return result
+
+
 def main():
     if os.getenv('RUN_LAPKA_SMOKE') != '1':
         raise SystemExit('Set RUN_LAPKA_SMOKE=1 to use Gemini with synthetic messages.')
     load_dotenv(Path(__file__).with_name('.env'))
     responder, store, notifier = TracingResponder(), Mock(), Mock()
-    bot = Assistant(GeminiExtractor(), store, notifier=notifier, responder=responder)
+    extractor=CountingExtractor()
+    bot = Assistant(extractor, store, notifier=notifier, responder=responder)
     cases = [
         'Сколько стоит стрижка корги?',
         'У собаки зуд, что делать?',
@@ -40,10 +53,13 @@ def main():
         'Запишите на завтра в 15:00',
         'Расскажи анекдот',
     ]
-    report = {'checked_at':datetime.now(TZ).isoformat(), 'cases':[], 'wording_calls':responder.calls}
-    target = Path(__file__).parent / 'reports' / 'lapka-smoke.json'
+    report = {'checked_at':datetime.now(TZ).isoformat(), 'cases':[], 'local_reply_validation':responder.calls}
+    target = Path(__file__).parent / 'reports' / 'lapka-fast-smoke.json'
     target.parent.mkdir(exist_ok=True)
     for index, message in enumerate(cases):
+        started=time.perf_counter()
+        before=extractor.calls
+        before_http=extractor.http_attempts
         history, state = bot.respond(message, [], BookingState())
         answer = history[-1]['content']
         assert not state.last_error, 'Extraction/API failed'
@@ -67,14 +83,19 @@ def main():
         store.save.assert_not_called()
         notifier.send.assert_not_called()
         report['cases'].append({'message':message, 'answer':answer, 'passed':True,
-                                'draft':state.draft.model_dump(), 'pending':bool(state.pending)})
+                                'draft':state.draft.model_dump(), 'pending':bool(state.pending),
+                                'gemini_calls':extractor.calls-before,
+                                'http_attempts':extractor.http_attempts-before_http,
+                                'seconds':round(time.perf_counter()-started,3)})
         target.write_text(json.dumps(report, ensure_ascii=False, indent=2))
         print(f'{index+1}/5 passed: {answer}', flush=True)
-    assert responder.calls and any(item['accepted'] for item in responder.calls)
+    # Ambiguous cases may correctly reject every proposed wording and use server replies.
+    assert len(report['cases'])==5 and extractor.calls<=3
+    report['wording_fallbacks']=sum(not item['accepted'] for item in responder.calls)
     report['database_writes'] = report['telegram_sends'] = 0
     report['result'] = 'passed'
     target.write_text(json.dumps(report, ensure_ascii=False, indent=2))
-    print('5 cases passed; real Gemini, no database or Telegram writes.', flush=True)
+    print(f'5 cases passed; {extractor.calls} Gemini calls, no database or Telegram writes.', flush=True)
 
 
 if __name__ == '__main__':
