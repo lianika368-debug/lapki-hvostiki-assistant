@@ -15,17 +15,17 @@ from ui_gate import run_session, _active_sessions
 
 
 @pytest.mark.parametrize('message',['привет','Здравствуйте!','спасибо','ты так долго отвечаешь'])
-def test_short_messages_are_immediate_and_preserve_draft(message):
+def test_short_messages_use_generated_reply_and_preserve_draft(message):
     extractor, store, notifier = Mock(), Mock(), Mock()
     bot = Assistant(extractor, store, notifier=notifier, responder=LapkaResponder())
-    state = BookingState(active=True,draft=Draft(phone='+79990000000',service='nails'))
+    extractor.extract.return_value = Extraction(intent='общее', reply='Помогу с вопросами об уходе — что хотите уточнить?')
+    state = BookingState(active=True,draft=Draft(service='nails'))
     bot._prepare(state)
     original = (state.draft.model_dump(),state.application_id,state.revision,state.pending)
     h, state = bot.respond(message, [], state)
-    extractor.extract.assert_not_called()
+    extractor.extract.assert_called_once()
     store.save.assert_not_called();notifier.send.assert_not_called()
-    assert h[-1]['content']
-    if message=='привет':assert 'Лапка' in h[-1]['content']
+    assert h[-1]['content'] == extractor.extract.return_value.reply
     assert (state.draft.model_dump(),state.application_id,state.revision,state.pending)==original
 
 
@@ -53,7 +53,7 @@ def test_one_real_sdk_call_contains_extraction_and_reply(monkeypatch):
     constructor.assert_called_once();client.models.generate_content.assert_called_once()
     assert h[-1]['content']=='Комплексный груминг для кошек: от 2 500 ₽. Стоимость ориентировочная.'
     assert constructor.call_args.kwargs['http_options'].retry_options.attempts==1
-    assert constructor.call_args.kwargs['http_options'].timeout==10000
+    assert constructor.call_args.kwargs['http_options'].timeout==20000
     assert str(client.models.generate_content.call_args.kwargs['config'].thinking_config.thinking_level).endswith('MINIMAL')
     store.save.assert_not_called();notifier.send.assert_not_called()
 
@@ -82,8 +82,8 @@ def test_one_transient_retry_uses_remaining_time_not_a_new_budget(monkeypatch):
     assert extracted._api_attempts==2
     calls=client.models.generate_content.call_args_list
     assert len(calls)==2
-    assert calls[0].kwargs['config'].http_options.timeout==10000
-    assert 6800<=calls[1].kwargs['config'].http_options.timeout<=6900
+    assert calls[0].kwargs['config'].http_options.timeout==20000
+    assert 16800<=calls[1].kwargs['config'].http_options.timeout<=16900
     assert '_api_attempts' not in extracted.model_dump()
 
 
@@ -96,7 +96,7 @@ def test_transient_error_does_not_loop_beyond_one_retry(monkeypatch):
 
 def test_insufficient_budget_or_timeout_does_not_retry(monkeypatch):
     temporary=type('TemporaryAPIError',(Exception,),{'code':503})
-    client=retry_client(monkeypatch,[temporary()],spent=8.8)
+    client=retry_client(monkeypatch,[temporary()],spent=18.8)
     with pytest.raises(temporary):GeminiExtractor().extract('Вопрос',[],Draft(),SALON)
     client.models.generate_content.assert_called_once()
     client=retry_client(monkeypatch,[TimeoutError()],spent=3)

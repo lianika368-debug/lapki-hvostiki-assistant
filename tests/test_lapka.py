@@ -174,5 +174,43 @@ def test_sdk_receives_user_prompt_and_real_data_block(monkeypatch):
     assert call['config'].response_mime_type == 'application/json'
     assert extracted.reply.startswith('Помогу')
     assert constructor.call_args.kwargs['http_options'].retry_options.attempts == 1
-    assert constructor.call_args.kwargs['http_options'].timeout == 10000
+    assert constructor.call_args.kwargs['http_options'].timeout == 20000
     fake_client.models.generate_content.assert_called_once()
+
+
+@pytest.mark.parametrize('message,topics,text', [
+    ('Что ты умеешь?', ['capabilities'], 'Помогу узнать стоимость ухода и подготовить тестовую заявку — что хотите уточнить?'),
+    ('Что посоветуете, если кот очень боится?', ['groomers'], 'С кошками и тревожными питомцами работает Марина. Что хотели бы уточнить перед визитом?'),
+    ('Спасибо, пока просто узнаю', [], 'Конечно, спрашивайте об услугах в удобном темпе.'),
+])
+def test_natural_generated_consultation_is_not_replaced_by_template(message, topics, text):
+    assistant = bot(Extraction(intent='общее', topics=topics), text)
+    h, state = turn(assistant, message)
+    assert h[-1]['content'] == text
+    assert not state.active and not state.saved
+    assistant.store.save.assert_not_called()
+    assistant.notifier.send.assert_not_called()
+
+
+
+def test_natural_reply_can_refer_to_known_pet_age_without_repeating_a_template():
+    text = 'Для Плюша в возрасте 3 лет можно обсудить уход с Мариной. Она работает с кошками и тревожными питомцами.'
+    assistant = bot(Extraction(intent='общее', topics=['groomers']), text)
+    h, state = turn(assistant, 'Кто сможет поработать с Плюшем?',
+                    BookingState(draft=Draft(pet_name='Плюш', pet_age='3 года', pet_type='кошка')))
+    assert h[-1]['content'] == text
+
+
+
+def test_included_reply_does_not_have_to_repeat_an_unasked_price():
+    text = 'В комплекс входят мытьё, сушка, вычёсывание, стрижка, обработка ушей и когтей; парфюм — по вашему желанию.'
+    assistant = bot(Extraction(intent='общее', topics=['included'], price_services=['cat_full']), text)
+    h, state = turn(assistant, 'Что входит в комплекс для кошки?')
+    assert h[-1]['content'] == text
+
+
+def test_price_can_be_written_as_a_natural_sentence_with_exact_amount_and_from():
+    text = 'Комплексный груминг для кошек стоит от 2 500 ₽.'
+    assistant = bot(Extraction(intent='цена', price_services=['cat_full']), text)
+    h, state = turn(assistant, 'Сколько стоит комплекс для кошки?')
+    assert h[-1]['content'] == text

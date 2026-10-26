@@ -67,3 +67,60 @@ def test_summary_is_shown_once_with_full_server_history_retained():
     assert len(response[1][0]['content'])<len(full)
     assert response[2][0]['content']==full
     assert response[7].count('2 500')==1
+
+
+
+def test_message_input_clears_before_work_and_status_distinguishes_draft(monkeypatch):
+    import app
+    from app import send_message
+    from models import Extraction
+    extractor, store, notifier = Mock(), Mock(), Mock()
+    extractor.extract.return_value = Extraction(intent='запись', action='book', patch=Draft(service='nails'))
+    monkeypatch.setattr(app, 'assistant', Assistant(extractor, store, notifier=notifier))
+    stream = send_message('Хочу оставить заявку на когти', [], BookingState())
+    pending = next(stream)
+    assert pending[0]['value'] == '' and pending[0]['interactive'] is False
+    assert 'готовит ответ' in pending[9]
+    assert pending[1][-1] == {'role':'user', 'content':'Хочу оставить заявку на когти'}
+    extractor.extract.assert_not_called()
+    completed = next(stream)
+    assert completed[0]['value'] == '' and completed[0]['interactive'] is True
+    assert 'ещё не отправлен' in completed[9]
+    store.save.assert_not_called(); notifier.send.assert_not_called()
+
+
+def test_message_input_is_restored_on_api_failure(monkeypatch):
+    import app
+    from app import send_message
+    extractor, store, notifier = Mock(), Mock(), Mock()
+    extractor.extract.side_effect = TimeoutError('fake')
+    monkeypatch.setattr(app, 'assistant', Assistant(extractor, store, notifier=notifier))
+    state = BookingState(draft=Draft(pet_name='Плюш'))
+    frames = list(send_message('Что входит в комплекс?', [], state))
+    assert frames[0][0]['value'] == ''
+    assert frames[-1][0]['value'] == 'Что входит в комплекс?'
+    assert frames[-1][0]['interactive'] is True and state.draft.pet_name == 'Плюш'
+    assert 'не отправлена' in frames[-1][9]
+    store.save.assert_not_called(); notifier.send.assert_not_called()
+
+
+def test_stream_holds_session_lock_until_result_and_releases_on_close(monkeypatch):
+    from types import SimpleNamespace
+    from app import send_message, clear
+    from ui_gate import _active_sessions
+    request = SimpleNamespace(session_hash='stream-test')
+    stream = send_message('Что ты умеешь?', [], BookingState(), request=request)
+    next(stream)
+    assert 'stream-test' in _active_sessions
+    assert 'обрабатывается' in clear(request=request)[9]
+    stream.close()
+    assert 'stream-test' not in _active_sessions
+
+
+def test_ready_and_saved_status_cannot_be_confused_with_sent_message():
+    state = BookingState(active=True, draft=Draft(phone='+79991234567', service='nails'))
+    Assistant(Mock(), Mock())._prepare(state)
+    assert 'ещё не отправлена' in result([], state)[9]
+    state.saved = True
+    assert 'сохранена' in result([], state)[9]
+    assert 'не подтверждённая запись' in result([], state)[9]
