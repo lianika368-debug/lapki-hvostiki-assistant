@@ -39,6 +39,9 @@ class BookingState:
     reset_requested: bool = False
     editing: bool = False
     delivery: str = 'not_attempted'
+    form_visible: bool = False
+    form_rendered: dict[str, str] = field(default_factory=dict)
+    form_error: str = ''
 
 
 def route_intent(message, extracted):
