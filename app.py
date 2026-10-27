@@ -299,13 +299,12 @@ with gr.Blocks(title='Лапки & Хвостики — AI-ассистент', 
         keep = gr.Button('Оставить как было', visible=False, size='sm')
         select_service = gr.Button('Выбрать экспресс-линьку', visible=False, size='sm')
     with gr.Column(visible=False, elem_id='booking-form') as booking_form:
-        gr.HTML('<h2>Быстрая заявка</h2><p class="booking-hint">Заполните два обязательных поля. Дату и подробности можно согласовать позже.</p>')
+        gr.HTML('<h2>Быстрая заявка</h2><p class="booking-hint">Заполните два обязательных поля. Пожелания можно указать ниже.</p>')
         with gr.Row():
             form_phone = gr.Textbox(label='Телефон *', placeholder='+7 (999) 123-45-67', max_length=30, scale=1, min_width=220)
             form_task = gr.Textbox(label='Услуга или что нужно питомцу *', placeholder='Например, стрижка когтей или помощь с линькой', max_length=1800, scale=2, min_width=240)
-        with gr.Accordion('Пожелания (необязательно)', open=False):
-            form_when = gr.Textbox(label='Когда удобно', placeholder='Например, в субботу после обеда', max_length=300)
-            form_note = gr.Textbox(label='Питомец и особенности', placeholder='Кличка, порода, характер — если хотите добавить', lines=2, max_length=1000)
+        form_when = gr.Textbox(visible=False, max_length=300)
+        form_note = gr.Textbox(label='Пожелания (необязательно)', placeholder='Например, удобное время или особенности питомца', lines=2, max_length=1000)
         form_errors = gr.HTML('<p role="alert"></p>', elem_id='booking-form-error')
         with gr.Row():
             form_next = gr.Button('Проверить заявку', variant='primary')
