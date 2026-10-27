@@ -14,6 +14,7 @@ from assistant import Assistant, BookingState, SALON
 from ui_summary import render_summary
 from conversation import render_facts
 from models import Draft, Extraction
+from quick_booking import BATCH_PROMPT, QuickBooking, is_booking_start, booking_details, form_values, form_patch, form_error
 from gemini_client import GeminiExtractor
 from lapka import LapkaResponder
 from ui_gate import run_session, session_slot
@@ -40,6 +41,12 @@ def controls(state):
 def result(history, booking, input_value=''):
     ready = bool(booking.pending and not booking.saved and not booking.issues and not booking.editing)
     review = render_summary(booking.pending, SALON) if ready else ''
+    show_form = bool(booking.active and not booking.saved and not ready)
+    values = form_values(booking.draft, SALON)
+    refresh = not booking.form_rendered or (show_form and not booking.form_visible)
+    fields = [gr.update(value=value) if refresh or booking.form_rendered.get(key) != value else gr.skip()
+              for key, value in values.items()]
+    booking.form_visible, booking.form_rendered = show_form, values
     status = ('Не удалось завершить обработку. Ввод сохранён для повтора; новая заявка не отправлена.' if booking.last_error else
               'Тестовая заявка сохранена. Это не подтверждённая запись в салон.' if booking.saved else
               'Заявка ещё не отправлена.' if ready else
@@ -50,16 +57,24 @@ def result(history, booking, input_value=''):
         if item['role'] == 'assistant' and 'Проверьте заявку:' in item['content']:
             prefix = item['content'].split('Проверьте заявку:',1)[0]
             item['content'] = prefix + 'Данные готовы. Проверьте их ниже и нажмите «Отправить заявку».'
+        elif item['role'] == 'assistant' and item['content'] == 'Что изменить в заявке? Можно назвать несколько изменений одним сообщением.':
+            item['content'] = 'Измените нужные поля в форме ниже и нажмите «Проверить заявку».'
     return (input_value if booking.last_error else '', display_history, history, booking,
             gr.update(visible=ready), gr.update(visible=bool(booking.issues)),
             gr.update(visible=bool(booking.suggestion == 'shedding' and not booking.draft.service)),
             review, booking.revision or '',
             '<p role="status" aria-live="polite">' + status + '</p>',
             gr.update(visible=not len(history) > 1), gr.update(visible=booking.reset_requested),
-            gr.update(visible=not ready, value='Новая заявка' if booking.saved else 'Подготовить заявку'))
+            gr.update(visible=not ready and not show_form, value='Новая заявка' if booking.saved else 'Подготовить заявку'),
+            gr.update(visible=show_form), *fields,
+            '<p role="alert">' + html.escape(booking.form_error or (next(iter(booking.issues.values())) if booking.issues and show_form else '')) + '</p>')
 
 
 def _send(message, history, booking, revision=None):
+    if is_booking_start(message or ''):
+        completed = list(_start_application(history, booking, message))
+        completed[0] = ''
+        return tuple(completed)
     history, booking = assistant.respond(message or '', history or list(WELCOME), booking or BookingState(), revision=revision or None)
     return result(history, booking, message)
 
@@ -68,20 +83,68 @@ def preset(message, history, booking, revision=None, request: gr.Request = None)
     yield from send_message(message, history, booking, revision, request=request)
 
 
-def _start_application(history, booking):
+def _start_application(history, booking, message='Хочу оставить заявку'):
     booking = booking or BookingState()
     if booking.saved:
         booking = BookingState(draft=Draft(owner_name=booking.draft.owner_name, phone=booking.draft.phone))
-    booking.active, booking.last_error = True, False
-    answer = assistant._prepare(booking)
-    history, booking = assistant._reply('Хочу оставить заявку', answer, history or list(WELCOME), booking)
+    booking.active, booking.last_error, booking.form_error = True, False, ''
+    seed = booking_details(message, booking.draft, SALON)
+    if seed:
+        booking.pending, booking.revision = None, None
+    complete = booking.draft.phone and (booking.draft.service or booking.draft.request_text)
+    if complete and not booking.editing and not seed:
+        answer = assistant._prepare(booking)
+    else:
+        booking.awaiting_field = 'request_text' if not (booking.draft.service or booking.draft.request_text) else 'phone'
+        answer = BATCH_PROMPT
+    history, booking = assistant._reply(message, answer, history or list(WELCOME), booking)
     completed = list(result(history, booking))
+    if seed:
+        for index, key in enumerate(('phone', 'task', 'when', 'note'), 14):
+            completed[index] = gr.update(value=seed[key])
     completed[0] = gr.skip()  # Starting a draft must not erase an unsent message.
     return tuple(completed)
 
 
 def start_application(history, booking, request: gr.Request = None):
     return run_session(request, lambda: _start_application(history, booking), _busy_result)
+
+
+def _prepare_form(phone, task, when, note, history, booking):
+    booking = booking or BookingState()
+    if booking.saved:
+        return result(history or list(WELCOME), booking)
+    booking.active, booking.last_error = True, False
+    raw = [phone or '', task or '', when or '', note or '']
+    try:
+        data = QuickBooking(phone=raw[0], task=raw[1], when=raw[2], note=raw[3])
+        patch = form_patch(data, booking.draft, SALON)
+    except ValueError as exc:
+        booking.pending, booking.revision = None, None
+        booking.form_error = form_error(exc)
+        completed = list(result(history or list(WELCOME), booking))
+        for index, value, limit in zip(range(14, 18), raw, (30, 1800, 300, 1000)):
+            completed[index] = gr.update(value=value[:limit])
+        completed[0] = gr.skip()
+        return tuple(completed)
+    if any(getattr(booking.draft, key) != value for key, value in patch.items()):
+        assistant._invalidate(booking)
+    for key, value in patch.items():
+        setattr(booking.draft, key, value)
+    for key in ('phone', 'request_text', 'service', 'comment', 'preferred_date', 'preferred_time', 'schedule_note', 'edit'):
+        booking.issues.pop(key, None)
+    booking.form_error, booking.editing = '', False
+    answer = assistant._prepare(booking)
+    if not booking.pending:
+        booking.form_error = answer
+    history, booking = assistant._reply('Данные формы заявки', answer, history or list(WELCOME), booking)
+    completed = list(result(history, booking))
+    completed[0] = gr.skip()
+    return tuple(completed)
+
+
+def prepare_form(phone, task, when, note, history, booking, request: gr.Request = None):
+    return run_session(request, lambda: _prepare_form(phone, task, when, note, history, booking), _busy_result)
 
 
 def _quick_answer(topic, history, booking):
@@ -144,6 +207,11 @@ def send_message(message, history, booking, revision=None, request: gr.Request =
             return
         if not (message or '').strip():
             yield result(history or list(WELCOME), booking or BookingState())
+            return
+        if is_booking_start(message):
+            completed = list(_send(message, history, booking, revision))
+            completed[0] = gr.update(value='', interactive=True)
+            yield tuple(completed)
             return
         processing = [gr.skip() for _ in outputs]
         processing[0] = gr.update(value='', interactive=False)
@@ -230,6 +298,18 @@ with gr.Blocks(title='Лапки & Хвостики — AI-ассистент', 
         book = gr.Button('Подготовить заявку', variant='primary', size='sm', elem_id='start-application')
         keep = gr.Button('Оставить как было', visible=False, size='sm')
         select_service = gr.Button('Выбрать экспресс-линьку', visible=False, size='sm')
+    with gr.Column(visible=False, elem_id='booking-form') as booking_form:
+        gr.HTML('<h2>Быстрая заявка</h2><p class="booking-hint">Заполните два обязательных поля. Дату и подробности можно согласовать позже.</p>')
+        with gr.Row():
+            form_phone = gr.Textbox(label='Телефон *', placeholder='+7 (999) 123-45-67', max_length=30, scale=1, min_width=220)
+            form_task = gr.Textbox(label='Услуга или что нужно питомцу *', placeholder='Например, стрижка когтей или помощь с линькой', max_length=1800, scale=2, min_width=240)
+        with gr.Accordion('Пожелания (необязательно)', open=False):
+            form_when = gr.Textbox(label='Когда удобно', placeholder='Например, в субботу после обеда', max_length=300)
+            form_note = gr.Textbox(label='Питомец и особенности', placeholder='Кличка, порода, характер — если хотите добавить', lines=2, max_length=1000)
+        form_errors = gr.HTML('<p role="alert"></p>', elem_id='booking-form-error')
+        with gr.Row():
+            form_next = gr.Button('Проверить заявку', variant='primary')
+            form_cancel = gr.Button('Отменить заявку', variant='secondary')
     with gr.Column(visible=False, elem_id='review-panel') as review_panel:
         gr.HTML('<h2>Тестовая заявка</h2>')
         review = gr.HTML('', elem_id='application-summary')
@@ -253,12 +333,14 @@ with gr.Blocks(title='Лапки & Хвостики — AI-ассистент', 
             '<p>Сообщения обрабатывает Google Gemini. После явного подтверждения заявка сохраняется в Supabase и отправляется администратору в Telegram. '
             'Не указывайте лишних персональных данных. Очистка чата не удаляет уже отправленную заявку. '
             'Неизвестные длительность, категорию размера и возможность записи уточняет администратор.</p></div></details>', elem_id='privacy')
-    outputs = [message, chat, history, booking, review_panel, keep, select_service, review, revision, status, starters, reset_panel, book]
+    outputs = [message, chat, history, booking, review_panel, keep, select_service, review, revision, status, starters, reset_panel, book, booking_form, form_phone, form_task, form_when, form_note, form_errors]
     common = dict(outputs=outputs, concurrency_id='chat', concurrency_limit=4, api_name=False,
                   trigger_mode='once', show_progress='minimal')
     submit.click(send_message, inputs=[message,history,booking,revision], **common)
     message.submit(send_message, inputs=[message,history,booking,revision], **common)
     book.click(start_application, inputs=[history,booking], **common)
+    form_next.click(prepare_form, inputs=[form_phone,form_task,form_when,form_note,history,booking], **common)
+    form_cancel.click(partial(preset,'Отменить заявку'), inputs=[history,booking,revision], **common)
     confirm.click(partial(preset,'Подтверждаю'), inputs=[history,booking,revision], **common)
     edit.click(partial(preset,'Изменить заявку'), inputs=[history,booking,revision], **common)
     cancel.click(partial(preset,'Отменить заявку'), inputs=[history,booking,revision], **common)
