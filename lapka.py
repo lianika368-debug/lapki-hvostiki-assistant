@@ -58,12 +58,26 @@ def safe_text(candidate, data):
     if numbers(candidate) - (numbers(baseline) + numbers(known_details)):
         return False
     before, after = normalized(baseline), normalized(candidate)
+    # Avoid repeating the same coat-condition price qualifier in separate clauses.
+    if len(re.findall(r'(?:цен\w*|стоимост\w*)[^.!?\n]{0,60}завис\w*[^.!?\n]{0,60}шерст', after)) > 1:
+        return False
     if re.search(r'записал|записаны|заброниров|запись подтверждена|время подтверждено|время согласовано|запись оформлена|ждем вас', after):
         return False
     if re.search(r'сохран[её]н|отправлен|отправил|передан|передал', after):
         return False
     if re.search(r'заявк\w*.{0,40}(?:создан|принят|зарегистрир|успеш)', after):
         return False
+    if re.search(r'справочник\w*|в данных салона', after):
+        return False
+    if re.search(r'границ\w*.{0,50}(?:вес|размер)|(?:вес|размер).{0,50}границ\w*', after):
+        return False
+    if not pet.get('pet_size'):
+        identifiers = [normalized(str(pet.get(key) or '')) for key in ('pet_breed', 'pet_weight')]
+        identifiers = [value for value in identifiers if value and value not in {'собака', 'собак', 'кошка', 'кошк', 'метис'}]
+        for clause in re.split(r'[.!?？\n]+', after):
+            sizes = [stem for stem in ('мелк', 'средн', 'крупн') if stem in clause]
+            if len(sizes) == 1 and any(re.search(r'(?<!\w)' + re.escape(value) + r'(?!\w)', clause) for value in identifiers):
+                return False
     if re.search(r'https?://|www\.', after):
         return False
     # A model must not turn missing size information into a breed/weight category.
@@ -83,7 +97,7 @@ def safe_text(candidate, data):
             if len(services) > 1 and normalized(item['name'] + ': ' + item['price']) not in after:
                 return False
     needs_administrator = any(text in before for text in (
-        'длительность процедур', 'данных о свободных', 'границы по весу', 'указанное время'))
+        'длительность процедур', 'данных о свободных', 'указанное время'))
     if needs_administrator and 'администратор' not in after:
         return False
     if 'не хочу' in normalized(data['сообщение_клиента']) and re.search(r'давайте запиш|хотите запис|укажите телефон', after):
