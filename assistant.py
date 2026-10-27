@@ -319,6 +319,8 @@ class Assistant:
             topics.remove('included')
         if 'duration' in topics and 'included' in topics and 'included' not in lexical_topics(message):
             topics.remove('included')
+        if requests_price(message) and 'included' in topics and 'included' not in lexical_topics(message):
+            topics.remove('included')
         if extracted.recommendation and not requests_price(message):
             extracted.price_services = []
             extracted.intent = intent = 'общее'
