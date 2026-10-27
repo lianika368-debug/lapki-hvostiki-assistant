@@ -44,7 +44,7 @@ def result(history, booking, input_value=''):
               'Тестовая заявка сохранена. Это не подтверждённая запись в салон.' if booking.saved else
               'Заявка подготовлена, но ещё не отправлена. Проверьте её ниже и подтвердите отправку.' if ready else
               'Сообщение обработано. Черновик заявки ещё не отправлен.' if booking.active else
-              'Сообщение обработано. Можно продолжать разговор.' if len(history) > 1 else '')
+              '')
     display_history = [dict(item) for item in history]
     for item in display_history:
         if item['role'] == 'assistant' and 'Проверьте заявку:' in item['content']:
