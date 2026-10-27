@@ -13,7 +13,7 @@ import uvicorn
 from assistant import Assistant, BookingState, SALON
 from ui_summary import render_summary
 from conversation import render_facts
-from models import Extraction
+from models import Draft, Extraction
 from gemini_client import GeminiExtractor
 from lapka import LapkaResponder
 from ui_gate import run_session, session_slot
@@ -42,20 +42,21 @@ def result(history, booking, input_value=''):
     review = render_summary(booking.pending, SALON) if ready else ''
     status = ('Не удалось завершить обработку. Ввод сохранён для повтора; новая заявка не отправлена.' if booking.last_error else
               'Тестовая заявка сохранена. Это не подтверждённая запись в салон.' if booking.saved else
-              'Заявка подготовлена, но ещё не отправлена. Проверьте её ниже и подтвердите отправку.' if ready else
-              'Сообщение обработано. Черновик заявки ещё не отправлен.' if booking.active else
+              'Заявка ещё не отправлена.' if ready else
+              'Черновик заявки ещё не отправлен.' if booking.active else
               '')
     display_history = [dict(item) for item in history]
     for item in display_history:
         if item['role'] == 'assistant' and 'Проверьте заявку:' in item['content']:
             prefix = item['content'].split('Проверьте заявку:',1)[0]
-            item['content'] = prefix + 'Сводка заявки подготовлена. Проверьте актуальную версию в отдельном блоке ниже. Данные можно изменить или отменить.'
+            item['content'] = prefix + 'Данные готовы. Проверьте их ниже и нажмите «Отправить заявку».'
     return (input_value if booking.last_error else '', display_history, history, booking,
             gr.update(visible=ready), gr.update(visible=bool(booking.issues)),
             gr.update(visible=bool(booking.suggestion == 'shedding' and not booking.draft.service)),
             review, booking.revision or '',
             '<p role="status" aria-live="polite">' + status + '</p>',
-            gr.update(visible=not len(history) > 1), gr.update(visible=booking.reset_requested))
+            gr.update(visible=not len(history) > 1), gr.update(visible=booking.reset_requested),
+            gr.update(visible=not ready, value='Новая заявка' if booking.saved else 'Подготовить заявку'))
 
 
 def _send(message, history, booking, revision=None):
@@ -65,6 +66,22 @@ def _send(message, history, booking, revision=None):
 
 def preset(message, history, booking, revision=None, request: gr.Request = None):
     yield from send_message(message, history, booking, revision, request=request)
+
+
+def _start_application(history, booking):
+    booking = booking or BookingState()
+    if booking.saved:
+        booking = BookingState(draft=Draft(owner_name=booking.draft.owner_name, phone=booking.draft.phone))
+    booking.active, booking.last_error = True, False
+    answer = assistant._prepare(booking)
+    history, booking = assistant._reply('Хочу оставить заявку', answer, history or list(WELCOME), booking)
+    completed = list(result(history, booking))
+    completed[0] = gr.skip()  # Starting a draft must not erase an unsent message.
+    return tuple(completed)
+
+
+def start_application(history, booking, request: gr.Request = None):
+    return run_session(request, lambda: _start_application(history, booking), _busy_result)
 
 
 def _quick_answer(topic, history, booking):
@@ -236,12 +253,12 @@ with gr.Blocks(title='Лапки & Хвостики — AI-ассистент', 
             '<p>Сообщения обрабатывает Google Gemini. После явного подтверждения заявка сохраняется в Supabase и отправляется администратору в Telegram. '
             'Не указывайте лишних персональных данных. Очистка чата не удаляет уже отправленную заявку. '
             'Неизвестные длительность, категорию размера и возможность записи уточняет администратор.</p></div></details>', elem_id='privacy')
-    outputs = [message, chat, history, booking, review_panel, keep, select_service, review, revision, status, starters, reset_panel]
+    outputs = [message, chat, history, booking, review_panel, keep, select_service, review, revision, status, starters, reset_panel, book]
     common = dict(outputs=outputs, concurrency_id='chat', concurrency_limit=4, api_name=False,
                   trigger_mode='once', show_progress='minimal')
     submit.click(send_message, inputs=[message,history,booking,revision], **common)
     message.submit(send_message, inputs=[message,history,booking,revision], **common)
-    book.click(partial(preset,'Хочу оставить заявку'), inputs=[history,booking,revision], **common)
+    book.click(start_application, inputs=[history,booking], **common)
     confirm.click(partial(preset,'Подтверждаю'), inputs=[history,booking,revision], **common)
     edit.click(partial(preset,'Изменить заявку'), inputs=[history,booking,revision], **common)
     cancel.click(partial(preset,'Отменить заявку'), inputs=[history,booking,revision], **common)
