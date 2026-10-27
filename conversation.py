@@ -176,8 +176,7 @@ def render_facts(extracted, salon, draft=None):
         parts.append('\n'.join(f"{salon['services'][k]['name']}: {salon['services'][k]['price']}." for k in keys)
                      if keys else 'Если пока не выбрали услугу, помогу разобраться. Какой уход нужен вашему питомцу?')
         if any(k in DOG_SERVICES.values() for k in keys) and not draft.pet_size:
-            parts.append('В прайсе есть мелкие, средние и крупные собаки, но границы по весу не указаны. '
-                         'По породе и килограммам я не могу надёжно выбрать категорию — её уточнит администратор.')
+            parts.append('Подскажите, пожалуйста, размер вашей собаки: мелкий, средний или крупный?')
     recommendation = extracted.recommendation
     if recommendation:
         options = {
