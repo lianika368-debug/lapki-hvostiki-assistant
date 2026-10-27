@@ -188,7 +188,12 @@ def render_facts(extracted, salon, draft=None):
         }
         if recommendation in options:
             key, reason = options[recommendation]
-            parts.append(reason + (f"\n{salon['services'][key]['name']}: {salon['services'][key]['price']}." if key not in priced else ''))
+            if recommendation == 'mats':
+                # The price already explains the dependency on the coat's condition.
+                if key not in priced:
+                    parts.append(f"{salon['services'][key]['name']}: {salon['services'][key]['price']}.")
+            else:
+                parts.append(reason + (f"\n{salon['services'][key]['name']}: {salon['services'][key]['price']}." if key not in priced else ''))
         elif recommendation == 'complex':
             parts.append(salon['included'])
     for topic in extracted.topics:
