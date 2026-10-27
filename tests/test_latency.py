@@ -136,7 +136,7 @@ def test_session_gate_is_released_after_error():
 def test_busy_ui_response_preserves_input_history_draft_and_revision():
     from app import _busy_result,outputs,demo
     result=_busy_result()
-    assert len(result)==len(outputs)==13
+    assert len(result)==len(outputs)==19
     assert 'обрабатывается' in result[9]
     assert all(value=={'__type__':'update'} for index,value in enumerate(result) if index!=9)
     chat_events=[fn for fn in demo.fns.values() if fn.concurrency_id=='chat']

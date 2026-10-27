@@ -77,11 +77,11 @@ def test_message_input_clears_before_work_and_status_distinguishes_draft(monkeyp
     extractor, store, notifier = Mock(), Mock(), Mock()
     extractor.extract.return_value = Extraction(intent='запись', action='book', patch=Draft(service='nails'))
     monkeypatch.setattr(app, 'assistant', Assistant(extractor, store, notifier=notifier))
-    stream = send_message('Хочу оставить заявку на когти', [], BookingState())
+    stream = send_message('Поможете оформить уход для кота?', [], BookingState())
     pending = next(stream)
     assert pending[0]['value'] == '' and pending[0]['interactive'] is False
     assert 'готовит ответ' in pending[9]
-    assert pending[1][-2] == {'role':'user', 'content':'Хочу оставить заявку на когти'}
+    assert pending[1][-2] == {'role':'user', 'content':'Поможете оформить уход для кота?'}
     assert pending[1][-1] == {'role':'assistant', 'content':app.TYPING_MESSAGE}
     assert 'data-thinking="true"' in pending[9]
     extractor.extract.assert_not_called()
@@ -152,7 +152,8 @@ def test_prepare_button_disappears_when_review_is_ready_and_returns_on_edit():
     assert not result([], state)[12]['visible']
     state.pending = None
     state.editing = True
-    assert result([], state)[12]['visible']
+    editing = result([], state)
+    assert not editing[12]['visible'] and editing[13]['visible']
     state.saved = True
     assert result([], state)[12]['value'] == 'Новая заявка'
 
@@ -185,5 +186,6 @@ def test_prepare_button_asks_only_for_missing_required_field(monkeypatch):
     state = BookingState(draft=Draft(service='nails'))
     response = app.start_application([], state)
     assert state.awaiting_field == 'phone' and not state.pending
-    assert response[12]['visible']
+    assert not response[12]['visible'] and response[13]['visible']
+    assert response[15]['value'] == 'Стрижка когтей'
     extractor.extract.assert_not_called(); store.save.assert_not_called()
