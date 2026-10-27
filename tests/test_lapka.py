@@ -214,3 +214,60 @@ def test_price_can_be_written_as_a_natural_sentence_with_exact_amount_and_from()
     assistant = bot(Extraction(intent='цена', price_services=['cat_full']), text)
     h, state = turn(assistant, 'Сколько стоит комплекс для кошки?')
     assert h[-1]['content'] == text
+
+
+
+@pytest.mark.parametrize('extracted', [
+    Extraction(intent='общее', recommendation='mats'),
+    Extraction(intent='цена', recommendation='mats', price_services=['mats']),
+])
+def test_mats_price_and_coat_condition_are_shown_only_once(extracted):
+    from conversation import render_facts
+    reply = render_facts(extracted, SALON)
+    assert reply.count('500 ₽') == 1
+    assert reply.lower().count('зависит от состояния шерсти') == 1
+    assert reply.lower().count('расчёсывание колтунов') == 1
+
+
+def test_generated_duplicate_is_replaced_by_the_non_repeating_price():
+    duplicate = ('В салоне есть расчёсывание колтунов. Точная стоимость зависит от состояния шерсти. '
+                 'Расчёсывание колтунов: от 500 ₽, точная цена зависит от состояния шерсти.')
+    assistant = bot(Extraction(intent='общее', recommendation='mats'), duplicate)
+    history, _ = turn(assistant, 'У кота колтуны, что можно сделать?')
+    assert history[-1]['content'] == 'Расчёсывание колтунов: от 500 ₽, точная цена зависит от состояния шерсти.'
+
+
+def test_generated_price_with_one_qualifier_can_remain_conversational():
+    text = ('Расчёсывание колтунов: от 500 ₽, точная цена зависит от состояния шерсти. '
+            'Для какого питомца нужен уход?')
+    assistant = bot(Extraction(intent='общее', recommendation='mats'), text)
+    history, _ = turn(assistant, 'У кота колтуны, что можно сделать?')
+    assert history[-1]['content'] == text
+
+
+
+def test_generated_internal_size_boundary_explanation_is_replaced():
+    prices = ('Комплексный груминг для собак мелких пород: от 2 200 ₽.\n'
+              'Комплексный груминг для собак средних пород: от 3 200 ₽.\n'
+              'Комплексный груминг для крупных собак: от 4 500 ₽.')
+    unwanted = prices + ' В прайсе границы по весу не указаны, их уточнит администратор.'
+    assistant = bot(Extraction(intent='цена', price_services=['dog_small'],
+                               patch=Draft(pet_type='собака', pet_breed='корги')), unwanted)
+    history, state = turn(assistant, 'Сколько стоит комплекс для корги?')
+    assert 'границы' not in history[-1]['content'].lower()
+    assert all(price in history[-1]['content'] for price in ('2 200', '3 200', '4 500'))
+    assert 'размер вашей собаки' in history[-1]['content']
+    assert state.draft.pet_size is None and state.draft.service is None
+
+
+
+def test_generated_wording_cannot_guess_dog_size_from_breed():
+    prices = ('Комплексный груминг для собак мелких пород: от 2 200 ₽.\n'
+              'Комплексный груминг для собак средних пород: от 3 200 ₽.\n'
+              'Комплексный груминг для крупных собак: от 4 500 ₽.')
+    assistant = bot(Extraction(intent='цена', price_services=['dog_small'],
+                               patch=Draft(pet_type='собака', pet_breed='корги')),
+                    prices + ' Корги — мелкая собака.')
+    history, state = turn(assistant, 'Сколько стоит комплекс для корги?')
+    assert 'Корги — мелкая собака' not in history[-1]['content']
+    assert 'размер вашей собаки' in history[-1]['content'] and state.draft.pet_size is None

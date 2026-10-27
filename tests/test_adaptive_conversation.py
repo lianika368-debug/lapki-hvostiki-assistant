@@ -160,7 +160,8 @@ def test_weight_never_assigns_dog_category_or_price():
     assert reconcile_service(draft).service is None
     answer=render_facts(Extraction(intent='цена',price_services=['dog_small']),SALON,draft)
     assert all(price in answer for price in ('2 200','3 200','4 500'))
-    assert 'границы по весу не указаны' in answer
+    assert 'Подскажите, пожалуйста, размер вашей собаки' in answer
+    assert 'границы' not in answer.lower() and 'по породе' not in answer.lower()
     draft.pet_size='средний';draft.request_text='комплекс'
     assert reconcile_service(draft).service=='dog_medium'
     answer=render_facts(Extraction(intent='цена',price_services=['dog_small']),SALON,draft)
@@ -284,6 +285,8 @@ def test_recommendation_does_not_repeat_price_even_if_model_requests_it():
     bot=make(Extraction(intent='цена',recommendation='shedding',price_services=['shedding']))
     h,s=turn(bot,'Собака сильно линяет, нужна ли стрижка?')
     assert h[-1]['content'].count('1 500')==1
+    assert 'справочник' not in h[-1]['content'].lower()
+    assert 'подскажет мастер' in h[-1]['content'].lower()
 
 
 def test_failed_model_on_pet_switch_cannot_leave_old_application_sendable():
