@@ -40,7 +40,7 @@ def test_reset_requires_confirmation_and_clears_everything():
 def test_error_preserves_input_and_summary_escapes_html():
     state = BookingState(last_error=True)
     assert result([],state,'непотерянный текст')[0] == 'непотерянный текст'
-    state = BookingState(active=True,draft=Draft(phone='+79991234567',service='nails',comment='<script>alert(1)</script>'))
+    state = BookingState(active=True,draft=Draft(phone='+79991234567',service='nails',pet_name='<script>alert(1)</script>'))
     Assistant(Mock(),Mock())._prepare(state)
     response = result([],state)
     assert '<script>' not in response[7] and '&lt;script&gt;' in response[7]
@@ -142,3 +142,48 @@ def test_typing_indicator_also_disappears_on_unexpected_callback_error(monkeypat
     assert frames[-1][0]['interactive'] is True
     assert not any(item['content'] == app.TYPING_MESSAGE for item in frames[-1][1] + frames[-1][2])
     assert 'data-thinking' not in frames[-1][9]
+
+
+
+def test_prepare_button_disappears_when_review_is_ready_and_returns_on_edit():
+    state = BookingState(active=True, draft=Draft(phone='+79991234567', service='nails'))
+    Assistant(Mock(), Mock())._prepare(state)
+    assert result([], state)[4]['visible']
+    assert not result([], state)[12]['visible']
+    state.pending = None
+    state.editing = True
+    assert result([], state)[12]['visible']
+    state.saved = True
+    assert result([], state)[12]['value'] == 'Новая заявка'
+
+
+def test_prepare_button_uses_known_details_without_api_and_requires_confirmation(monkeypatch):
+    import app
+    extractor, store, notifier = Mock(), Mock(), Mock()
+    monkeypatch.setattr(app, 'assistant', Assistant(extractor, store, notifier=notifier))
+    state = BookingState(draft=Draft(phone='+79991234567', service='nails', comment='Для мастера'), explained=['preparation'])
+    response = app.start_application([], state)
+    assert response[4]['visible'] and not response[12]['visible']
+    assert response[0] == {'__type__':'update'}
+    assert state.pending and not state.saved
+    assert 'Обсуждалось' in state.pending.handoff
+    assert 'Обсудили' not in response[7] and 'Для мастера' not in response[7]
+    assert 'Обсуждалось' not in response[1][-1]['content']
+    extractor.extract.assert_not_called(); store.save.assert_not_called(); notifier.send.assert_not_called()
+    app.assistant.notifier.enabled = False
+    completed = list(app.preset('Подтверждаю', response[2], state, response[8]))[-1]
+    assert completed[3].saved
+    store.save.assert_called_once()
+    assert store.save.call_args.args[1].comment == 'Для мастера'
+    assert 'объяснена подготовка' in store.save.call_args.args[1].handoff
+
+
+def test_prepare_button_asks_only_for_missing_required_field(monkeypatch):
+    import app
+    extractor, store = Mock(), Mock()
+    monkeypatch.setattr(app, 'assistant', Assistant(extractor, store))
+    state = BookingState(draft=Draft(service='nails'))
+    response = app.start_application([], state)
+    assert state.awaiting_field == 'phone' and not state.pending
+    assert response[12]['visible']
+    extractor.extract.assert_not_called(); store.save.assert_not_called()
