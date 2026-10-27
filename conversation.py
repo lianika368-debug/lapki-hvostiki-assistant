@@ -181,8 +181,8 @@ def render_facts(extracted, salon, draft=None):
     if recommendation:
         options = {
             'shedding': ('shedding', 'Если основная задача — линька, можно рассмотреть экспресс-линьку. '
-                         'Нужна ли ещё стрижка, уточнит мастер: правил по типам шерсти в справочнике нет.'),
-            'mats': ('mats', 'В салоне есть расчёсывание колтунов. Точная стоимость зависит от состояния шерсти.'),
+                         'Нужна ли дополнительная стрижка, подскажет мастер.'),
+            'mats': ('mats', ''),
             'hygiene': ('hygiene', 'Можно рассмотреть гигиеническую стрижку. Детали её состава уточнит администратор.'),
         }
         if recommendation in options:
@@ -199,7 +199,7 @@ def render_facts(extracted, salon, draft=None):
         if topic in {'address', 'hours', 'payment', 'cancellation', 'included', 'preparation'}:
             parts.append(salon[topic])
         elif topic == 'duration':
-            parts.append('Длительность процедур в данных салона не указана. Её уточнит администратор с учётом питомца и услуги.')
+            parts.append('Длительность процедуры уточнит администратор с учётом питомца и услуги.')
         elif topic == 'contacts':
             parts.append(f"Телефон: {salon['phone']}. Telegram: {salon['telegram']}.")
         elif topic == 'groomers':
