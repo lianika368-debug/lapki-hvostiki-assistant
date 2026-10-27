@@ -28,7 +28,7 @@ def wants_booking(message):
 
 def lexical_topics(message):
     patterns = {'duration': r'длит|долго|сколько.*(?:времени|час|минут)|по времени',
-                'included': r'что вход|состав|включен', 'preparation': r'подготов',
+                'included': r'что.{0,25}вход|что.{0,25}включ|состав|включен', 'preparation': r'подготов',
                 'hours': r'график|часы работы|когда.*работа', 'address': r'адрес|где.*наход',
                 'availability': r'свободн|есть.*мест', 'payment': r'оплат|сбп',
                 'cancellation': r'правила отмен|перенос.*запис'}

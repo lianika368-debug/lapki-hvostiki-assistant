@@ -88,6 +88,10 @@ def safe_text(candidate, data):
         if word not in before:
             return False
     services = list(data['справочник_салона']['services'].values())
+    service_keys = data['справочник_салона']['services'].keys()
+    if data.get('цена_запрошена') and services and not any(key in {'dog_small', 'dog_medium', 'dog_large'} for key in service_keys):
+        if 'размер' in after and 'размер' not in before:
+            return False
     if data.get('цена_запрошена') or re.search(r'₽|рубл|руб\.', after):
         for item in services:
             # Price and «от» stay exact; ordinary prose need not copy a template.
