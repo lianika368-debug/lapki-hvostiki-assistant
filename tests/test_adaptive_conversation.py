@@ -333,3 +333,23 @@ def test_edit_after_handoff_does_not_claim_to_update_saved_request():
     assert s.draft.model_dump()==original and s.application_id==number
     assert 'не изменялись' in h[-1]['content'] and number in h[-1]['content']
     bot.store.save.assert_not_called();bot.notifier.send.assert_not_called()
+
+
+
+def test_price_question_does_not_add_unrequested_package_contents():
+    bot = make(Extraction(intent='цена', price_services=['dog_small'], topics=['included'],
+                          patch=Draft(pet_type='собака', pet_breed='корги')))
+    history, state = turn(bot, 'Сколько стоит комплексный груминг для корги?')
+    answer = history[-1]['content']
+    assert all(price in answer for price in ('2 200', '3 200', '4 500'))
+    assert 'размер вашей собаки' in answer
+    assert 'профессиональной косметикой' not in answer
+    assert state.draft.pet_size is None
+
+
+def test_price_question_keeps_package_contents_when_also_explicitly_requested():
+    bot = make(Extraction(intent='цена', price_services=['dog_small'], topics=['included'],
+                          patch=Draft(pet_type='собака', pet_breed='корги')))
+    history, _ = turn(bot, 'Сколько стоит комплекс для корги и что в него входит?')
+    assert 'профессиональной косметикой' in history[-1]['content']
+    assert '2 200' in history[-1]['content']

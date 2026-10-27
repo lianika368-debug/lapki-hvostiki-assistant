@@ -271,3 +271,13 @@ def test_generated_wording_cannot_guess_dog_size_from_breed():
     history, state = turn(assistant, 'Сколько стоит комплекс для корги?')
     assert 'Корги — мелкая собака' not in history[-1]['content']
     assert 'размер вашей собаки' in history[-1]['content'] and state.draft.pet_size is None
+
+
+
+def test_fixed_price_answer_does_not_ask_about_unrelated_dog_size():
+    unwanted = ('Расчёсывание колтунов стоит от 500 ₽, точная цена зависит от состояния шерсти. '
+                'Подскажите размер вашей собаки для комплексного ухода?')
+    assistant = bot(Extraction(intent='цена', price_services=['mats']), unwanted)
+    state = BookingState(draft=Draft(pet_type='собака', pet_breed='корги'))
+    history, _ = turn(assistant, 'Сколько стоит расчёсывание колтунов?', state)
+    assert history[-1]['content'] == 'Расчёсывание колтунов: от 500 ₽, точная цена зависит от состояния шерсти.'
