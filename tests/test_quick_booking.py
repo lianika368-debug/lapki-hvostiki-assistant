@@ -116,6 +116,19 @@ def test_optional_time_and_features_are_retained_without_separate_questions(offl
     offline.extractor.extract.assert_not_called(); offline.store.save.assert_not_called()
 
 
+def test_visible_wishes_are_preserved_in_review_and_saved_application(offline):
+    state = BookingState()
+    wishes = 'В субботу после обеда, питомец боится фена'
+    ready = app.prepare_form('+79990000000', 'Стрижка когтей', '', wishes, [], state)
+    assert ready[4]['visible'] and state.pending.comment == wishes
+    edited = list(app.preset('Изменить заявку', ready[2], state, ready[8]))[-1]
+    assert edited[17]['value'] == wishes
+    ready = app.prepare_form('+79990000000', 'Стрижка когтей', '', wishes, edited[2], state)
+    list(app.preset('Подтверждаю', ready[2], state, ready[8]))
+    assert offline.store.save.call_args.args[1].comment == wishes
+    offline.extractor.extract.assert_not_called()
+
+
 def test_storage_failure_keeps_ready_form_data_and_does_not_notify(offline):
     state = BookingState()
     ready = app.prepare_form('+79990000000', 'Стрижка когтей', '', 'Для мастера', [], state)
