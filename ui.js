@@ -50,6 +50,23 @@
   document.addEventListener('touchstart',e=>{if(e.target.closest('#salon-chat'))followNext=false;},{passive:true});
   const attach=()=>{const chat=document.querySelector('#salon-chat');if(chat)chatObserver.observe(chat,{childList:true,subtree:true});};
   attach();
+  // Reveal a newly opened form or review once; ordinary chat updates don't move the page.
+  let lastBookingPanel=null, bookingFrame=null;
+  const revealBookingPanel=()=>{
+    bookingFrame=null;
+    const form=document.querySelector('#booking-form');
+    const review=document.querySelector('#review-panel');
+    const panel=form?.getClientRects().length?form:review?.getClientRects().length?review:null;
+    const panelKey=panel?.id||null;
+    if(panel&&panelKey!==lastBookingPanel){
+      panel.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    }
+    lastBookingPanel=panelKey;
+  };
+  const bookingObserver=new MutationObserver(()=>{
+    if(bookingFrame===null) bookingFrame=requestAnimationFrame(revealBookingPanel);
+  });
+  bookingObserver.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
   if(window.visualViewport){
     const keyboard=()=>document.documentElement.style.setProperty('--keyboard-offset',
       Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop)+'px');
