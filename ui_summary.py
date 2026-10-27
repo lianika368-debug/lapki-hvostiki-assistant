@@ -1,6 +1,7 @@
 """Readable, escaped HTML for the current application review; no submission logic."""
 from datetime import datetime
 from html import escape
+from textwrap import shorten
 
 from models import TZ
 
@@ -22,7 +23,7 @@ def desired_when(application):
 
 
 def render_summary(application, salon):
-    """Show only supplied values; keep the plain-text handoff unchanged."""
+    """Compact client review; administrator-only handoff and optional details stay in the application."""
     rows = []
 
     def row(label, value, *, wide=False):
@@ -31,24 +32,18 @@ def render_summary(application, salon):
             rows.append(f'<div{css}><dt>{escape(label)}</dt><dd>{escape(str(value))}</dd></div>')
 
     service = salon['services'].get(application.service)
-    row('Услуга', service['name'] if service else 'Уточнит администратор', wide=True)
-    row('Запрос', application.request_text, wide=True)
-    row('Стоимость', service['price'] if service else 'Уточнит администратор')
-    row('Когда', desired_when(application))
-    row('Пожелание по времени', application.schedule_note, wide=True)
+    row('Услуга', service['name'] if service else shorten(application.request_text or 'Уточнит администратор', width=160, placeholder='…'), wide=True)
+    if service:
+        row('Стоимость', service['price'])
+    when = desired_when(application)
+    if application.schedule_note and not (application.preferred_date and application.preferred_time):
+        known = when.split(' · ')[0] if application.preferred_date or application.preferred_time else ''
+        when = ' · '.join(value for value in (known, application.schedule_note) if value)
+    row('Когда', when)
     row('Телефон', application.phone)
-    row('Владелец', application.owner_name)
-    pet = ' · '.join(value for value in (application.pet_name, application.pet_type, application.pet_breed) if value)
+    pet = ' · '.join(value for value in (application.pet_name, application.pet_breed or application.pet_type) if value)
     row('Питомец', pet, wide=True)
-    for label, key in (('Возраст', 'pet_age'), ('Вес', 'pet_weight'),
-                       ('Размер', 'pet_size'), ('Мастер', 'preferred_groomer')):
-        row(label, getattr(application, key))
-    row('Комментарий', application.comment, wide=True)
-    for line in (application.handoff or '').splitlines():
-        if line.startswith('Обсуждалось: '):
-            row('Обсудили', line.removeprefix('Обсуждалось: '), wide=True)
-        elif line.startswith('Осталось: '):
-            row('Уточнить', line.removeprefix('Осталось: '), wide=True)
+    if application.preferred_groomer != 'Без предпочтений':
+        row('Мастер', application.preferred_groomer)
     return ('<dl class="review-fields">' + ''.join(rows) + '</dl>'
-            '<p class="review-note">Дата и время — пожелание. Запись не подтверждена.</p>'
-            '<p class="review-hint">После подтверждения передадим тестовые данные и резюме разговора администратору.</p>')
+            '<p class="review-note">Дата и время — пожелание. Запись не подтверждена.</p>')
