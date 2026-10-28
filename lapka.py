@@ -58,6 +58,13 @@ def safe_text(candidate, data):
     if numbers(candidate) - (numbers(baseline) + numbers(known_details)):
         return False
     before, after = normalized(baseline), normalized(candidate)
+    # Weight is not used by the salon's price list, so it cannot refine a quote.
+    for question in re.findall(r'[^.!?？\n]*[?？]', after):
+        if re.search(r'\bвес\w*|весит\w*|килограмм\w*|\bкг\b', question):
+            return False
+        if ('колтун' in before and not any(stem in before for stem in ('мелк', 'средн', 'крупн'))
+                and re.search(r'пород\w*|размер\w*', question)):
+            return False
     # Avoid repeating the same coat-condition price qualifier in separate clauses.
     if len(re.findall(r'(?:цен\w*|стоимост\w*)[^.!?\n]{0,60}завис\w*[^.!?\n]{0,60}шерст', after)) > 1:
         return False
