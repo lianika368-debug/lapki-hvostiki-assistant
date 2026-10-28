@@ -281,3 +281,11 @@ def test_fixed_price_answer_does_not_ask_about_unrelated_dog_size():
     state = BookingState(draft=Draft(pet_type='собака', pet_breed='корги'))
     history, _ = turn(assistant, 'Сколько стоит расчёсывание колтунов?', state)
     assert history[-1]['content'] == 'Расчёсывание колтунов: от 500 ₽, точная цена зависит от состояния шерсти.'
+
+
+@pytest.mark.parametrize('question', ['Какой у питомца примерный вес?', 'Какой породы ваш питомец и какой у него примерный вес?', 'Какая порода питомца?', 'Сколько питомец весит?'])
+def test_mats_price_does_not_ask_for_irrelevant_details(question):
+    candidate = 'Расчёсывание колтунов: от 500 ₽, точная цена зависит от состояния шерсти. ' + question
+    assistant = bot(Extraction(intent='цена', price_services=['mats']), candidate)
+    history, _ = turn(assistant, 'Сколько стоит расчёсывание колтунов?')
+    assert history[-1]['content'] == 'Расчёсывание колтунов: от 500 ₽, точная цена зависит от состояния шерсти.'
